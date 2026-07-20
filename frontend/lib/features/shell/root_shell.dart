@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../state/app_state.dart';
 import '../../widgets/app_bottom_sheet.dart';
+import '../../widgets/spicy_logo.dart';
 import '../dashboard/dashboard_screen.dart';
 import '../finance/finance_screen.dart';
 import '../inventory/inventory_screen.dart';
@@ -68,9 +70,20 @@ class _RootShellState extends State<RootShell> {
       FinanceScreen(key: _financeKey),
     ];
 
+    // El Dashboard pinta su propio fondo rojo de borde a borde (igual
+    // que lock/login), así que ahí la barra va transparente y "flota"
+    // sobre ese mismo degradado — sin costura entre barra y contenido.
+    // Las demás pestañas (aún sin rediseñar) conservan una barra clara.
+    final isDashboard = _index == 0;
+
     return Scaffold(
+      extendBodyBehindAppBar: isDashboard,
       appBar: AppBar(
         titleSpacing: 20,
+        backgroundColor: isDashboard ? Colors.transparent : Colors.white,
+        foregroundColor: isDashboard ? Colors.white : AppColors.carbon,
+        elevation: 0,
+        systemOverlayStyle: isDashboard ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
         title: InkWell(
           onTap: () => AppBottomSheet.show(
             context,
@@ -79,20 +92,19 @@ class _RootShellState extends State<RootShell> {
           ),
           child: Row(
             children: [
-              Container(
-                width: 38, height: 38,
-                decoration: BoxDecoration(color: AppColors.spicyRed, borderRadius: BorderRadius.circular(10)),
-                alignment: Alignment.center,
-                child: const Text('S', style: TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.w900, fontStyle: FontStyle.italic)),
-              ),
-              const SizedBox(width: 10),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('SPICY', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900, fontStyle: FontStyle.italic)),
-                  Text(_titles[_index], style: const TextStyle(fontSize: 10.5, color: AppColors.asphalt, fontWeight: FontWeight.w700)),
-                ],
-              ),
+              isDashboard
+                  ? const SpicyLogo(width: 76)
+                  : const SpicyLogoBadge(
+                      logoWidth: 46,
+                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      borderRadius: BorderRadius.all(Radius.circular(10)),
+                    ),
+              const SizedBox(width: 12),
+              Text(_titles[_index],
+                  style: TextStyle(
+                      fontSize: 11.5,
+                      color: isDashboard ? Colors.white70 : AppColors.asphalt,
+                      fontWeight: FontWeight.w700)),
             ],
           ),
         ),
@@ -100,7 +112,7 @@ class _RootShellState extends State<RootShell> {
           IconButton(
             tooltip: 'Bloquear',
             onPressed: widget.onLockNow,
-            icon: const Icon(Icons.lock_outline),
+            icon: Icon(Icons.lock_outline, color: isDashboard ? Colors.white : AppColors.carbon),
           ),
           const SizedBox(width: 8),
         ],

@@ -18,8 +18,9 @@ class AppColors {
   static const success = Color(0xFF1FAE6E);
   static const warning = spicyRed;
 
-  // Tema claro
-  static const lightBg = bone;
+  // Tema claro — fondo blanco puro (30% del manual de marca), el hueso
+  // se reserva para acentos/superficies secundarias, no como fondo base.
+  static const lightBg = white;
   static const lightSurface = white;
   static const lightSurfaceAlt = Color(0xFFEAE3D6);
   static const lightBorder = Color(0xFFE1D8C8);
