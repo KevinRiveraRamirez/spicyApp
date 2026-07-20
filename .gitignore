@@ -1,0 +1,16 @@
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editores
+.vscode/*
+!.vscode/launch.json
+!.vscode/settings.json
+.idea/
+
+# Logs
+*.log
+
+# Nota: frontend/ ya tiene su propio .gitignore generado por Flutter
+# (excluye build/, .dart_tool/, etc.) — no hace falta repetirlo aquí.
