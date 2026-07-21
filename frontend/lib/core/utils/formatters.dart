@@ -8,13 +8,19 @@ class Formatters {
   // separador de miles al estilo es_CR (punto).
   static final _currency = NumberFormat.currency(
     locale: 'es_CR',
-    symbol: ' ₡',
+    symbol: '₡',
     decimalDigits: 0,
     customPattern: '¤#,##0',
   );
-  static final _shortDate = DateFormat('d MMM', 'es_MX');
+  static final _shortDate = DateFormat('d MMM', 'es_CR');
+  static final _shortDateTime = DateFormat('d MMM · h:mm a', 'es_CR');
 
   static String money(num value) => _currency.format(value);
 
-  static String shortDate(DateTime date) => _shortDate.format(date);
+  // .toLocal(): convierte a la hora del dispositivo (Costa Rica, si el
+  // teléfono/PC está en esa zona horaria) — los timestamps de Supabase
+  // llegan en UTC.
+  static String shortDate(DateTime date) => _shortDate.format(date.toLocal());
+
+  static String shortDateTime(DateTime date) => _shortDateTime.format(date.toLocal());
 }

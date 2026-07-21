@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 import 'core/config/supabase_config.dart';
 import 'core/theme/app_theme.dart';
@@ -8,6 +9,9 @@ import 'state/app_state.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Necesario para que DateFormat con locale (fechas en español, ej.
+  // "20 jul") funcione — si no, truena con LocaleDataException.
+  await initializeDateFormatting('es_CR');
   await SupabaseClientProvider.init();
   runApp(const SpicyAdminApp());
 }

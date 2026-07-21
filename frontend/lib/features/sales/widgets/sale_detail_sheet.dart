@@ -12,7 +12,7 @@ class SaleDetailSheet extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('${Formatters.shortDate(sale.soldAt)} · ${sale.paymentMethod}',
+        Text('${Formatters.shortDateTime(sale.soldAt)} · ${sale.paymentMethod}',
             style: const TextStyle(color: AppColors.asphalt, fontSize: 12.5)),
         const SizedBox(height: 12),
         ...sale.items.map((it) => Padding(

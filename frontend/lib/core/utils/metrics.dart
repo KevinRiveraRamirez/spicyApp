@@ -30,8 +30,10 @@ class Metrics {
       .where((p) => _inLastDays(p.orderedAt, days))
       .fold(0, (a, p) => a + p.total);
 
+  // Alineado con el modelo simplificado de Inventario: sin niveles de
+  // "stock bajo" por ahora, solo agotado (stock en 0).
   static List<Product> lowStock(List<Product> products) =>
-      products.where((p) => p.stock <= p.minStock).toList();
+      products.where((p) => p.stock <= 0).toList();
 
   static double netProfit({
     required List<Sale> sales,

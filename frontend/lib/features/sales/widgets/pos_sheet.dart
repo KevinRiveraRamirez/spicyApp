@@ -138,7 +138,7 @@ class _PosSheetState extends State<PosSheet> {
           DropdownButtonFormField<String>(
             value: _payment,
             decoration: const InputDecoration(labelText: 'Método de pago'),
-            items: const ['Efectivo', 'Tarjeta', 'Transferencia']
+            items: const ['Efectivo', 'Sinpe', 'Transferencia']
                 .map((m) => DropdownMenuItem(value: m, child: Text(m)))
                 .toList(),
             onChanged: (v) => setState(() => _payment = v ?? _payment),

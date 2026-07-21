@@ -111,7 +111,7 @@ class DashboardScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(p.name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5)),
-                            Text('Quedan ${p.stock} ${p.unit} · mínimo ${p.minStock}',
+                            Text('${p.category} · SKU ${p.sku}',
                                 style: const TextStyle(fontSize: 11.5, color: AppColors.asphalt)),
                           ],
                         ),
@@ -119,8 +119,8 @@ class DashboardScreen extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
                         decoration: BoxDecoration(color: AppColors.spicyRed.withOpacity(.12), borderRadius: BorderRadius.circular(20)),
-                        child: Text(p.stock == 0 ? 'Agotado' : 'Bajo',
-                            style: const TextStyle(color: AppColors.spicyRed, fontSize: 11, fontWeight: FontWeight.w700)),
+                        child: const Text('Agotado',
+                            style: TextStyle(color: AppColors.spicyRed, fontSize: 11, fontWeight: FontWeight.w700)),
                       ),
                     ],
                   ),

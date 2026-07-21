@@ -70,12 +70,12 @@ class _RootShellState extends State<RootShell> {
       FinanceScreen(key: _financeKey),
     ];
 
-    // Las pestañas ya rediseñadas (Dashboard, Inventario) pintan su
-    // propio fondo rojo de borde a borde (BrandScreen, igual que
+    // Las pestañas ya rediseñadas (Dashboard, Inventario, Ventas) pintan
+    // su propio fondo rojo de borde a borde (BrandScreen, igual que
     // lock/login), así que ahí la barra va transparente y "flota"
     // sobre ese mismo degradado — sin costura entre barra y contenido.
     // Las demás pestañas (aún sin rediseñar) conservan una barra clara.
-    final usesBrandBg = _index == 0 || _index == 1;
+    final usesBrandBg = _index == 0 || _index == 1 || _index == 2;
 
     return Scaffold(
       extendBodyBehindAppBar: usesBrandBg,
