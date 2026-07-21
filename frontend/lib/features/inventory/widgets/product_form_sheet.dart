@@ -4,8 +4,8 @@ import '../../../core/theme/app_colors.dart';
 import '../../../models/product.dart';
 import '../../../state/app_state.dart';
 
-const kProductCategories = ['Playeras', 'Hoodies', 'Gorras', 'Pantalones', 'Accesorios', 'Otro'];
-const kProductEmojis = ['👕', '🧥', '🧢', '👖', '🎒', '🧦'];
+const kProductCategories = ['Accesorios', 'T-Shirt', 'Tenis', 'Suéter', 'Pantalones', 'Medias o Boxers'];
+const kProductEmojis = ['🎒', '👕', '👟', '🧥', '👖', '🧦'];
 
 class ProductFormSheet extends StatefulWidget {
   final Product? product;
@@ -21,7 +21,6 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
   late final TextEditingController _cost;
   late final TextEditingController _price;
   late final TextEditingController _stock;
-  late final TextEditingController _minStock;
   late String _category;
   bool _saving = false;
 
@@ -34,8 +33,10 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
     _cost = TextEditingController(text: p?.cost.toString() ?? '');
     _price = TextEditingController(text: p?.price.toString() ?? '');
     _stock = TextEditingController(text: p?.stock.toString() ?? '0');
-    _minStock = TextEditingController(text: p?.minStock.toString() ?? '5');
-    _category = p?.category ?? kProductCategories.first;
+    // Si la pieza tiene una categoría vieja que ya no existe en la lista
+    // (por ejemplo, de datos de ejemplo anteriores), cae de vuelta a la
+    // primera categoría válida en vez de tronar el dropdown.
+    _category = kProductCategories.contains(p?.category) ? p!.category : kProductCategories.first;
   }
 
   Future<void> _save() async {
@@ -52,7 +53,7 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
       cost: double.tryParse(_cost.text) ?? 0,
       price: double.tryParse(_price.text) ?? 0,
       stock: int.tryParse(_stock.text) ?? 0,
-      minStock: int.tryParse(_minStock.text) ?? 0,
+      minStock: 0,
       unit: 'pza',
     );
     try {
@@ -100,11 +101,7 @@ class _ProductFormSheetState extends State<ProductFormSheet> {
           Expanded(child: TextField(controller: _price, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Precio venta'))),
         ]),
         const SizedBox(height: 12),
-        Row(children: [
-          Expanded(child: TextField(controller: _stock, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Stock actual'))),
-          const SizedBox(width: 10),
-          Expanded(child: TextField(controller: _minStock, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Stock mínimo'))),
-        ]),
+        TextField(controller: _stock, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Stock actual')),
         const SizedBox(height: 18),
         ElevatedButton(
           onPressed: _saving ? null : _save,

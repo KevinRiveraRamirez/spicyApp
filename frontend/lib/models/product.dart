@@ -49,11 +49,8 @@ class Product {
         'unit': unit,
       };
 
-  StockStatus get status {
-    if (stock <= 0) return StockStatus.out;
-    if (stock <= minStock) return StockStatus.low;
-    return StockStatus.ok;
-  }
+  // Por ahora, sin niveles de "stock bajo": solo agotado (0) u ok.
+  StockStatus get status => stock <= 0 ? StockStatus.out : StockStatus.ok;
 
   Product copyWith({
     String? name,

@@ -70,49 +70,52 @@ class _RootShellState extends State<RootShell> {
       FinanceScreen(key: _financeKey),
     ];
 
-    // El Dashboard pinta su propio fondo rojo de borde a borde (igual
-    // que lock/login), así que ahí la barra va transparente y "flota"
+    // Las pestañas ya rediseñadas (Dashboard, Inventario) pintan su
+    // propio fondo rojo de borde a borde (BrandScreen, igual que
+    // lock/login), así que ahí la barra va transparente y "flota"
     // sobre ese mismo degradado — sin costura entre barra y contenido.
     // Las demás pestañas (aún sin rediseñar) conservan una barra clara.
-    final isDashboard = _index == 0;
+    final usesBrandBg = _index == 0 || _index == 1;
 
     return Scaffold(
-      extendBodyBehindAppBar: isDashboard,
+      extendBodyBehindAppBar: usesBrandBg,
       appBar: AppBar(
         titleSpacing: 20,
-        backgroundColor: isDashboard ? Colors.transparent : Colors.white,
-        foregroundColor: isDashboard ? Colors.white : AppColors.carbon,
+        backgroundColor: usesBrandBg ? Colors.transparent : Colors.white,
+        foregroundColor: usesBrandBg ? Colors.white : AppColors.carbon,
         elevation: 0,
-        systemOverlayStyle: isDashboard ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
-        title: InkWell(
-          onTap: () => AppBottomSheet.show(
-            context,
-            title: 'Configuración',
-            child: SettingsSheet(onSignedOut: widget.onSignedOut, onLockNow: widget.onLockNow),
-          ),
-          child: Row(
-            children: [
-              isDashboard
-                  ? const SpicyLogo(width: 76)
-                  : const SpicyLogoBadge(
-                      logoWidth: 46,
-                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                      borderRadius: BorderRadius.all(Radius.circular(10)),
-                    ),
-              const SizedBox(width: 12),
-              Text(_titles[_index],
-                  style: TextStyle(
-                      fontSize: 11.5,
-                      color: isDashboard ? Colors.white70 : AppColors.asphalt,
-                      fontWeight: FontWeight.w700)),
-            ],
-          ),
+        systemOverlayStyle: usesBrandBg ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
+        title: Row(
+          children: [
+            usesBrandBg
+                ? const SpicyLogo(width: 76)
+                : const SpicyLogoBadge(
+                    logoWidth: 46,
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    borderRadius: BorderRadius.all(Radius.circular(10)),
+                  ),
+            const SizedBox(width: 12),
+            Text(_titles[_index],
+                style: TextStyle(
+                    fontSize: 11.5,
+                    color: usesBrandBg ? Colors.white70 : AppColors.asphalt,
+                    fontWeight: FontWeight.w700)),
+          ],
         ),
         actions: [
           IconButton(
+            tooltip: 'Configuración',
+            onPressed: () => AppBottomSheet.show(
+              context,
+              title: 'Configuración',
+              child: SettingsSheet(onSignedOut: widget.onSignedOut, onLockNow: widget.onLockNow),
+            ),
+            icon: Icon(Icons.settings_outlined, color: usesBrandBg ? Colors.white : AppColors.carbon),
+          ),
+          IconButton(
             tooltip: 'Bloquear',
             onPressed: widget.onLockNow,
-            icon: Icon(Icons.lock_outline, color: isDashboard ? Colors.white : AppColors.carbon),
+            icon: Icon(Icons.lock_outline, color: usesBrandBg ? Colors.white : AppColors.carbon),
           ),
           const SizedBox(width: 8),
         ],
