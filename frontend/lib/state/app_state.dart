@@ -96,8 +96,22 @@ class AppState extends ChangeNotifier {
     required String supplierId,
     required String supplierName,
     required List<PurchaseLine> lines,
+    required String currency,
+    double exchangeRate = 1,
   }) async {
-    await _purchaseService.create(supplierId: supplierId, supplierName: supplierName, lines: lines);
+    await _purchaseService.create(
+      supplierId: supplierId,
+      supplierName: supplierName,
+      lines: lines,
+      currency: currency,
+      exchangeRate: exchangeRate,
+    );
+    purchases = await _purchaseService.fetchAll();
+    notifyListeners();
+  }
+
+  Future<void> markPurchaseInTransit(String purchaseId) async {
+    await _purchaseService.markInTransit(purchaseId);
     purchases = await _purchaseService.fetchAll();
     notifyListeners();
   }
@@ -116,6 +130,12 @@ class AppState extends ChangeNotifier {
   Future<void> createSupplier(Supplier s) async {
     final created = await _supplierService.create(s);
     suppliers = [...suppliers, created];
+    notifyListeners();
+  }
+
+  Future<void> deleteSupplier(String id) async {
+    await _supplierService.delete(id);
+    suppliers = suppliers.where((x) => x.id != id).toList();
     notifyListeners();
   }
 

@@ -17,6 +17,9 @@ class AppColors {
   // Colores funcionales (fuera del manual, uso exclusivo de UI/estado)
   static const success = Color(0xFF1FAE6E);
   static const warning = spicyRed;
+  // "En tránsito" (compras en camino desde el proveedor) — ni éxito
+  // (ya llegó) ni alerta (algo anda mal), un estado intermedio neutro.
+  static const info = Color(0xFF2B6CB0);
 
   // Tema claro — fondo blanco puro (30% del manual de marca), el hueso
   // se reserva para acentos/superficies secundarias, no como fondo base.

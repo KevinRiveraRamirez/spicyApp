@@ -15,7 +15,12 @@ class Formatters {
   static final _shortDate = DateFormat('d MMM', 'es_CR');
   static final _shortDateTime = DateFormat('d MMM · h:mm a', 'es_CR');
 
+  // Para compras a proveedores de China, que cotizan en dólares.
+  static final _usd = NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
+
   static String money(num value) => _currency.format(value);
+
+  static String usd(num value) => _usd.format(value);
 
   // .toLocal(): convierte a la hora del dispositivo (Costa Rica, si el
   // teléfono/PC está en esa zona horaria) — los timestamps de Supabase

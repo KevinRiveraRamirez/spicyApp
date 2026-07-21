@@ -23,4 +23,10 @@ class SupplierService {
         .single();
     return Supplier.fromMap(row);
   }
+
+  /// Las órdenes de compra ya hechas no se borran: `purchases.supplier_id`
+  /// queda en null (conserva `supplier_name` como snapshot histórico).
+  Future<void> delete(String id) async {
+    await _client.from('suppliers').delete().eq('id', id);
+  }
 }
