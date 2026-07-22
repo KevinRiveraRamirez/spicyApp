@@ -35,6 +35,19 @@ class Metrics {
   static List<Product> lowStock(List<Product> products) =>
       products.where((p) => p.stock <= 0).toList();
 
+  /// Categorías sin existencias: suma el stock de todas las piezas de
+  /// cada categoría (de [categories], la lista fija del negocio) y
+  /// marca las que dan 0 — esto cubre tanto "hay piezas pero todas en
+  /// 0" como "no hay ninguna pieza de esa categoría todavía", que de
+  /// otra forma no se detecta (no hay producto que marcar como
+  /// agotado si no existe ningún producto en esa categoría).
+  static List<String> categoriesWithNoStock(List<Product> products, List<String> categories) {
+    return categories.where((c) {
+      final total = products.where((p) => p.category == c).fold<int>(0, (a, p) => a + p.stock);
+      return total <= 0;
+    }).toList();
+  }
+
   static double netProfit({
     required List<Sale> sales,
     required List<Expense> expenses,

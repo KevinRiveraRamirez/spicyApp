@@ -11,6 +11,10 @@ class KpiCard extends StatelessWidget {
   final String? delta;
   final bool positive;
   final Color? background;
+  /// Color opcional para el valor (ej. verde/rojo según si es ingreso o
+  /// gasto, o si la utilidad es positiva o negativa). Si es null, usa el
+  /// color de texto normal del tema.
+  final Color? valueColor;
   /// Ancho fijo (uso en fila con scroll horizontal, teléfono). Si es
   /// null, la tarjeta ocupa todo el espacio que le den (uso en
   /// [Expanded] dentro de una fila fija, tablet/PC).
@@ -24,6 +28,7 @@ class KpiCard extends StatelessWidget {
     this.delta,
     this.positive = true,
     this.background,
+    this.valueColor,
     this.width = 150,
     this.margin = const EdgeInsets.only(right: 12),
   });
@@ -55,8 +60,8 @@ class KpiCard extends StatelessWidget {
           Text(
             value,
             style: solid
-                ? const TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.w900, fontStyle: FontStyle.italic)
-                : Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 19),
+                ? TextStyle(color: valueColor ?? Colors.white, fontSize: 19, fontWeight: FontWeight.w900, fontStyle: FontStyle.italic)
+                : Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 19, color: valueColor),
           ),
           if (delta != null) ...[
             const SizedBox(height: 6),

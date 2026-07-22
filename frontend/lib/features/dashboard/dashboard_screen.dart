@@ -6,6 +6,7 @@ import '../../core/utils/metrics.dart';
 import '../../state/app_state.dart';
 import '../../widgets/responsive_center.dart';
 import '../../widgets/spicy_logo.dart';
+import '../inventory/widgets/product_form_sheet.dart' show kProductCategories;
 import 'widgets/kpi_card.dart';
 import 'widgets/sales_trend_chart.dart';
 
@@ -28,6 +29,11 @@ class DashboardScreen extends StatelessWidget {
     final week = Metrics.salesInLastDays(app.sales, 7);
     final profit30 = Metrics.netProfit(sales: app.sales, expenses: app.expenses, purchases: app.purchases, days: 30);
     final lowStock = Metrics.lowStock(app.products);
+    // Categorías sin ninguna existencia (ej. "no hay tenis" — cubre
+    // tanto piezas en 0 como categorías sin ninguna pieza registrada,
+    // que si no, no se detectan porque no hay producto que marcar).
+    final emptyCategories = Metrics.categoriesWithNoStock(app.products, kProductCategories);
+    final totalAlerts = lowStock.length + emptyCategories.length;
     final trend = Metrics.dailyTrend(app.sales, days: 14);
     final top = Metrics.topProducts(app.sales, days: 30);
 
@@ -54,8 +60,8 @@ class DashboardScreen extends StatelessWidget {
       (
         label: 'SKUs activos',
         value: '${app.products.length}',
-        delta: '${lowStock.length} en alerta',
-        positive: lowStock.isEmpty,
+        delta: '$totalAlerts en alerta',
+        positive: totalAlerts == 0,
       ),
     ];
 
@@ -88,45 +94,30 @@ class DashboardScreen extends StatelessWidget {
             ),
           );
 
+    // Las categorías sin ninguna existencia van primero (más urgente:
+    // no hay nada de esa categoría para vender), luego las piezas
+    // puntuales en 0.
+    final alertRows = <Widget>[
+      ...emptyCategories.map((c) => _AlertRow(
+            icon: Icons.category_outlined,
+            title: c,
+            subtitle: 'Sin piezas con existencias en esta categoría',
+            badge: 'Sin stock',
+          )),
+      ...lowStock.map((p) => _AlertRow(
+            icon: Icons.warning_amber_rounded,
+            title: p.name,
+            subtitle: '${p.category} · SKU ${p.sku}',
+            badge: 'Agotado',
+          )),
+    ].take(4).toList();
+
     final Widget alertsCard = _Card(
       title: 'Alertas de inventario',
       action: TextButton(onPressed: () => onNavigate(1), child: const Text('Ver todo')),
-      child: lowStock.isEmpty
+      child: alertRows.isEmpty
           ? const Text('Todo el stock en niveles saludables ✅', style: TextStyle(fontSize: 12.5, color: AppColors.asphalt))
-          : Column(
-              children: lowStock.take(4).map((p) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 34, height: 34,
-                        decoration: BoxDecoration(color: AppColors.spicyRed.withOpacity(.1), borderRadius: BorderRadius.circular(10)),
-                        alignment: Alignment.center,
-                        child: const Icon(Icons.warning_amber_rounded, color: AppColors.spicyRed, size: 18),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(p.name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5)),
-                            Text('${p.category} · SKU ${p.sku}',
-                                style: const TextStyle(fontSize: 11.5, color: AppColors.asphalt)),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
-                        decoration: BoxDecoration(color: AppColors.spicyRed.withOpacity(.12), borderRadius: BorderRadius.circular(20)),
-                        child: const Text('Agotado',
-                            style: TextStyle(color: AppColors.spicyRed, fontSize: 11, fontWeight: FontWeight.w700)),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
-            ),
+          : Column(children: alertRows),
     );
 
     final Widget topCard = _Card(
@@ -299,6 +290,48 @@ class _QuickGrid extends StatelessWidget {
           ),
         );
       }).toList(),
+    );
+  }
+}
+
+/// Una fila de la tarjeta "Alertas de inventario" — se usa tanto para
+/// categorías sin existencias como para piezas puntuales agotadas.
+class _AlertRow extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final String badge;
+  const _AlertRow({required this.icon, required this.title, required this.subtitle, required this.badge});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Container(
+            width: 34, height: 34,
+            decoration: BoxDecoration(color: AppColors.spicyRed.withOpacity(.1), borderRadius: BorderRadius.circular(10)),
+            alignment: Alignment.center,
+            child: Icon(icon, color: AppColors.spicyRed, size: 18),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5)),
+                Text(subtitle, style: const TextStyle(fontSize: 11.5, color: AppColors.asphalt)),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+            decoration: BoxDecoration(color: AppColors.spicyRed.withOpacity(.12), borderRadius: BorderRadius.circular(20)),
+            child: Text(badge, style: const TextStyle(color: AppColors.spicyRed, fontSize: 11, fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
     );
   }
 }

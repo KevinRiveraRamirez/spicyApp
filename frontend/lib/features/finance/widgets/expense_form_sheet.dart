@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../models/expense.dart';
 import '../../../state/app_state.dart';
 
-const kExpenseCategories = ['Renta', 'Nómina', 'Maquila/Estampado', 'Marketing', 'Envíos', 'Otro'];
+const kExpenseCategories = ['Compra', 'Venta', 'Marketing', 'Transporte/Envíos', 'Otro'];
 
 class ExpenseFormSheet extends StatefulWidget {
   const ExpenseFormSheet({super.key});
