@@ -11,9 +11,11 @@ import '../../widgets/app_bottom_sheet.dart';
 import '../auth/widgets/pin_pad.dart';
 
 /// APK de Android publicado como release en GitHub (Firebase Hosting no
-/// permite subir .apk en el plan gratis). Al sacar una versión nueva,
-/// subí el APK como un nuevo release en GitHub y actualizá este link.
-const kApkDownloadUrl = 'https://github.com/KevinRiveraRamirez/spicyApp/releases/download/v1.0.0/app-release.apk';
+/// permite subir .apk en el plan gratis). "latest" siempre resuelve al
+/// release más reciente — el workflow de GitHub Actions sube uno nuevo
+/// automáticamente en cada push a main, así que este link nunca hay que
+/// tocarlo a mano.
+const kApkDownloadUrl = 'https://github.com/KevinRiveraRamirez/spicyApp/releases/latest/download/app-release.apk';
 
 class SettingsSheet extends StatefulWidget {
   final VoidCallback onSignedOut;
