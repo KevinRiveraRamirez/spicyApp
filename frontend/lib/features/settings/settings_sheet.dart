@@ -1,12 +1,19 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
 import '../../services/auth_service.dart';
 import '../../services/pin_service.dart';
 import '../../state/app_state.dart';
 import '../../widgets/app_bottom_sheet.dart';
 import '../auth/widgets/pin_pad.dart';
+
+/// APK de Android publicado como release en GitHub (Firebase Hosting no
+/// permite subir .apk en el plan gratis). Al sacar una versión nueva,
+/// subí el APK como un nuevo release en GitHub y actualizá este link.
+const kApkDownloadUrl = 'https://github.com/KevinRiveraRamirez/spicyApp/releases/download/v1.0.0/app-release.apk';
 
 class SettingsSheet extends StatefulWidget {
   final VoidCallback onSignedOut;
@@ -50,6 +57,16 @@ class _SettingsSheetState extends State<SettingsSheet> {
           subtitle: 'Descarga tus datos como JSON',
           onTap: () => _exportBackup(context, app),
         ),
+        // Solo tiene sentido desde la versión web: te descarga el APK
+        // para instalar la app nativa en Android. En la app ya instalada
+        // (Android) no aplica.
+        if (kIsWeb)
+          _row(
+            icon: Icons.android,
+            title: 'Descargar app para Android',
+            subtitle: 'Instala SPICY Admin en tu celular (APK)',
+            onTap: () => _downloadApk(context),
+          ),
         _row(
           icon: Icons.lock_outline,
           title: 'Bloquear ahora',
@@ -100,6 +117,16 @@ class _SettingsSheetState extends State<SettingsSheet> {
         actions: [TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Cerrar'))],
       ),
     );
+  }
+
+  Future<void> _downloadApk(BuildContext context) async {
+    final uri = Uri.parse(kApkDownloadUrl);
+    final ok = await launchUrl(uri, webOnlyWindowName: '_blank');
+    if (!ok && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se pudo descargar el APK')),
+      );
+    }
   }
 
   void _changePinFlow(BuildContext context) {
