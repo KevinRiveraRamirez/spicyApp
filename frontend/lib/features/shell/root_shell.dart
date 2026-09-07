@@ -62,7 +62,7 @@ class _SpicyAppShellState extends State<SpicyAppShell> {
   // "+" ambiguo), alcanzable con el pulgar en móvil.
   ({IconData icon, String label})? get _fabSpec => switch (_index) {
         1 => (icon: Icons.add, label: 'Agregar producto'),
-        2 => (icon: Icons.point_of_sale, label: 'Nueva venta'),
+        2 => (icon: Icons.add, label: 'Nueva venta'),
         3 => (icon: Icons.add, label: 'Nueva compra'),
         4 => (icon: Icons.add, label: 'Registrar gasto'),
         _ => null,
@@ -194,6 +194,7 @@ class _SpicyAppShellState extends State<SpicyAppShell> {
                     // contenido — repetir "Inicio" aquí sería la
                     // duplicación que se pidió eliminar.
                     title: _index == 0 ? null : _titles[_index],
+                    titleIcon: _index == 0 ? null : _destinations[_index].activeIcon,
                     primaryAction: headerButton,
                     actions: topBarActions,
                   ),

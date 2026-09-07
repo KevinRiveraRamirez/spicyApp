@@ -45,10 +45,11 @@ class SpicyTopBar extends StatelessWidget implements PreferredSizeWidget {
 /// acción principal y accesos de configuración/bloqueo.
 class SpicyContentHeader extends StatelessWidget {
   final String? title;
+  final IconData? titleIcon;
   final Widget? primaryAction;
   final List<Widget> actions;
 
-  const SpicyContentHeader({super.key, this.title, this.primaryAction, this.actions = const []});
+  const SpicyContentHeader({super.key, this.title, this.titleIcon, this.primaryAction, this.actions = const []});
 
   @override
   Widget build(BuildContext context) {
@@ -64,10 +65,26 @@ class SpicyContentHeader extends StatelessWidget {
         children: [
           if (title != null)
             Expanded(
-              child: Text(
-                title!,
-                style: AppTypography.screenTitle.copyWith(color: c.textPrimary),
-                overflow: TextOverflow.ellipsis,
+              child: Row(
+                children: [
+                  if (titleIcon != null) ...[
+                    Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(color: c.brandPrimary.withOpacity(.1), borderRadius: BorderRadius.circular(AppRadius.control)),
+                      alignment: Alignment.center,
+                      child: Icon(titleIcon, size: 18, color: c.brandPrimary),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                  ],
+                  Flexible(
+                    child: Text(
+                      title!,
+                      style: AppTypography.screenTitle.copyWith(color: c.textPrimary, letterSpacing: -0.3),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
               ),
             )
           else
