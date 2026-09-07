@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_spacing.dart';
+import '../../core/theme/app_text.dart';
 import '../../services/pin_service.dart';
 import '../../widgets/responsive_center.dart';
 import '../../widgets/spicy_logo.dart';
@@ -8,6 +10,9 @@ import 'widgets/pin_pad.dart';
 /// Pantalla de bloqueo por PIN de 4 dígitos, con biometría opcional.
 /// Si el dueño no tiene PIN configurado todavía, esta misma pantalla
 /// funciona en modo "crear PIN" (pide el PIN dos veces para confirmar).
+///
+/// Fondo azul de marca sólido (sin degradado): es la puerta de entrada
+/// de la app, la única pantalla donde el azul cubre toda la superficie.
 class LockScreen extends StatefulWidget {
   final VoidCallback onUnlocked;
   const LockScreen({super.key, required this.onUnlocked});
@@ -25,6 +30,7 @@ class _LockScreenState extends State<LockScreen> {
   bool _error = false;
   String _hint = '';
   bool _canBiometrics = false;
+  bool _authenticatingBiometrics = false;
 
   @override
   void initState() {
@@ -47,8 +53,11 @@ class _LockScreenState extends State<LockScreen> {
   }
 
   Future<void> _tryBiometrics() async {
+    setState(() => _authenticatingBiometrics = true);
     final ok = await _pinService.authenticateWithBiometrics();
-    if (ok && mounted) widget.onUnlocked();
+    if (!mounted) return;
+    setState(() => _authenticatingBiometrics = false);
+    if (ok) widget.onUnlocked();
   }
 
   void _onDigit(String d) {
@@ -120,58 +129,67 @@ class _LockScreenState extends State<LockScreen> {
     final greeting = hour < 12 ? 'Buenos días' : (hour < 19 ? 'Buenas tardes' : 'Buenas noches');
 
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [AppColors.spicyRed, AppColors.spicyRedDark, Color(0xFF1A0405)],
-          ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
-            child: ResponsiveCenter(
-              child: Column(
+      backgroundColor: AppColors.lightBrandPrimary,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl, vertical: AppSpacing.xxxl),
+          child: ResponsiveCenter(
+            maxWidth: 420,
+            child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SpicyLogo(width: 220),
+                const SpicyWordmark(width: 200, blue: false),
                 const SizedBox(height: 6),
-                const Text('STREETWEAR CO.', style: TextStyle(color: Colors.white70, fontSize: 10.5, letterSpacing: 2.5, fontWeight: FontWeight.w700)),
-                const SizedBox(height: 22),
+                Text('STREETWEAR CO.', style: AppTypography.label.copyWith(color: Colors.white70, letterSpacing: 2.5)),
+                const SizedBox(height: AppSpacing.xxl),
                 Text(
-                  _isCreating ? 'Configura tu acceso' : '$greeting 👋',
-                  style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900, fontStyle: FontStyle.italic),
+                  _isCreating ? 'Configura tu acceso' : greeting,
+                  style: AppTypography.screenTitle.copyWith(color: Colors.white),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  _isCreating ? _hint : (_hint.isEmpty ? 'Ingresa tu PIN. Sin rodeos.' : _hint),
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.white70, fontSize: 13.5),
+                const SizedBox(height: AppSpacing.xs),
+                Semantics(
+                  liveRegion: true,
+                  child: Text(
+                    _isCreating ? _hint : (_hint.isEmpty ? 'Ingresa tu PIN para continuar.' : _hint),
+                    textAlign: TextAlign.center,
+                    style: AppTypography.body.copyWith(color: Colors.white70),
+                  ),
                 ),
-                const SizedBox(height: 34),
+                const SizedBox(height: AppSpacing.xxxl),
                 PinDots(filled: _buffer.length, error: _error),
-                const SizedBox(height: 34),
+                const SizedBox(height: AppSpacing.xxxl),
                 PinPad(onDigit: _onDigit, onDelete: _onDelete),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.xl),
                 if (_canBiometrics && !_isCreating)
                   TextButton.icon(
-                    onPressed: _tryBiometrics,
-                    icon: const Icon(Icons.fingerprint, color: Colors.white),
-                    label: const Text('Usar biometría', style: TextStyle(color: Colors.white)),
+                    onPressed: _authenticatingBiometrics ? null : _tryBiometrics,
+                    style: TextButton.styleFrom(foregroundColor: Colors.white),
+                    icon: _authenticatingBiometrics
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          )
+                        : const Icon(Icons.fingerprint, color: Colors.white),
+                    label: Text(_authenticatingBiometrics ? 'Verificando…' : 'Usar biometría'),
                   ),
                 Container(
-                  margin: const EdgeInsets.only(top: 10),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  margin: const EdgeInsets.only(top: AppSpacing.sm),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(.12),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: const Text('🔒 Cifrado local · Bloqueo automático',
-                      style: TextStyle(color: Colors.white, fontSize: 11.5)),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.lock_outline, size: 13, color: Colors.white),
+                      const SizedBox(width: 6),
+                      Text('Cifrado local · Bloqueo automático', style: AppTypography.label.copyWith(color: Colors.white, fontSize: 11)),
+                    ],
+                  ),
                 ),
               ],
-              ),
             ),
           ),
         ),

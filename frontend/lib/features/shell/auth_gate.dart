@@ -50,7 +50,7 @@ class _AuthGateState extends State<AuthGate> with WidgetsBindingObserver {
     if (!_unlocked) {
       return LockScreen(onUnlocked: () => setState(() => _unlocked = true));
     }
-    return RootShell(
+    return SpicyAppShell(
       onSignedOut: () => setState(() {}),
       onLockNow: () => setState(() => _unlocked = false),
     );

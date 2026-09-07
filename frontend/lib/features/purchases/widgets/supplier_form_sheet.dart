@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../core/theme/app_spacing.dart';
 import '../../../models/supplier.dart';
 import '../../../state/app_state.dart';
+import '../../../widgets/spicy_buttons.dart';
 
 class SupplierFormSheet extends StatefulWidget {
   const SupplierFormSheet({super.key});
@@ -28,7 +30,7 @@ class _SupplierFormSheetState extends State<SupplierFormSheet> {
           decoration: const InputDecoration(labelText: 'Nombre del proveedor'),
           onChanged: (_) => setState(() {}),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.md),
         DropdownButtonFormField<String>(
           value: _origin,
           decoration: const InputDecoration(
@@ -38,11 +40,11 @@ class _SupplierFormSheetState extends State<SupplierFormSheet> {
           items: kSupplierOrigins.map((o) => DropdownMenuItem(value: o, child: Text(o))).toList(),
           onChanged: (v) => setState(() => _origin = v ?? _origin),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.md),
         TextField(controller: _contact, decoration: const InputDecoration(labelText: 'Contacto (opcional)')),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.md),
         TextField(controller: _phone, decoration: const InputDecoration(labelText: 'Teléfono (opcional)')),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.md),
         TextField(
           controller: _link,
           keyboardType: TextInputType.url,
@@ -51,9 +53,11 @@ class _SupplierFormSheetState extends State<SupplierFormSheet> {
             helperText: 'Alibaba, 1688, WhatsApp, sitio web, etc.',
           ),
         ),
-        const SizedBox(height: 18),
-        ElevatedButton(
-          onPressed: _saving || _name.text.trim().isEmpty
+        const SizedBox(height: AppSpacing.xl),
+        PrimaryButton(
+          label: 'Guardar proveedor',
+          loading: _saving,
+          onPressed: _name.text.trim().isEmpty
               ? null
               : () async {
                   setState(() => _saving = true);
@@ -71,9 +75,6 @@ class _SupplierFormSheetState extends State<SupplierFormSheet> {
                     if (mounted) setState(() => _saving = false);
                   }
                 },
-          child: _saving
-              ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-              : const Text('GUARDAR PROVEEDOR'),
         ),
       ],
     );

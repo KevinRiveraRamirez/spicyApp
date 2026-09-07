@@ -7,9 +7,9 @@
       "type": "dart",
       "program": "lib/main.dart",
       "args": [
-  "--dart-define=SUPABASE_URL=https://iykxuswiwknjodbwkmdb.supabase.co",
-  "--dart-define=SUPABASE_ANON_KEY=sb_publishable_GmzXEYVO1JgVq537XRh0UQ_O2FphSgU"
-]
+        "--dart-define=SUPABASE_URL=https://TU-PROYECTO.supabase.co",
+        "--dart-define=SUPABASE_ANON_KEY=TU_ANON_KEY_AQUI"
+      ]
     }
   ]
 }

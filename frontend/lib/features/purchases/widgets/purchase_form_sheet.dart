@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_text.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../models/product.dart';
 import '../../../models/supplier.dart';
 import '../../../services/purchase_service.dart';
 import '../../../state/app_state.dart';
+import '../../../widgets/spicy_buttons.dart';
 import '../../inventory/widgets/product_form_sheet.dart' show kProductCategories;
 
 /// Un renglón de la orden en construcción. Primero se elige la
@@ -65,6 +68,7 @@ class _PurchaseFormSheetState extends State<PurchaseFormSheet> {
   @override
   Widget build(BuildContext context) {
     final app = context.watch<AppState>();
+    final c = context.colors;
     if (_supplier == null && app.suppliers.isNotEmpty) _supplier = app.suppliers.first;
 
     return Column(
@@ -76,7 +80,7 @@ class _PurchaseFormSheetState extends State<PurchaseFormSheet> {
           items: app.suppliers.map((s) => DropdownMenuItem(value: s, child: Text('${s.name} · ${s.origin}'))).toList(),
           onChanged: (v) => setState(() => _supplier = v),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.lg),
         if (_isForeign)
           TextFormField(
             controller: _rateController,
@@ -89,36 +93,36 @@ class _PurchaseFormSheetState extends State<PurchaseFormSheet> {
           )
         else
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md),
             decoration: BoxDecoration(
-              color: AppColors.success.withOpacity(.08),
-              borderRadius: BorderRadius.circular(12),
+              color: c.success.withOpacity(.08),
+              borderRadius: BorderRadius.circular(AppRadius.control),
             ),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.check_circle_outline, size: 18, color: AppColors.success),
-                SizedBox(width: 8),
+                Icon(Icons.check_circle_outline, size: 18, color: c.success),
+                const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Text('Proveedor de Costa Rica: se registra directo en colones, sin tipo de cambio.',
-                      style: TextStyle(fontSize: 12, color: AppColors.asphalt)),
+                      style: AppTypography.label.copyWith(color: c.textSecondary)),
                 ),
               ],
             ),
           ),
-        const SizedBox(height: 20),
-        Text('Piezas', style: Theme.of(context).textTheme.titleSmall),
-        const SizedBox(height: 10),
+        const SizedBox(height: AppSpacing.xl),
+        Text('Piezas', style: AppTypography.sectionTitle.copyWith(color: c.textPrimary, fontSize: 15)),
+        const SizedBox(height: AppSpacing.sm),
         ..._lines.asMap().entries.map((entry) {
           final i = entry.key;
           final line = entry.value;
           final options = _productsInCategory(app, line.category);
           return Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            padding: const EdgeInsets.all(16),
+            margin: const EdgeInsets.only(bottom: AppSpacing.md),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.lightBorder),
+              color: c.surface,
+              borderRadius: BorderRadius.circular(AppRadius.card),
+              border: Border.all(color: c.border),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -126,33 +130,36 @@ class _PurchaseFormSheetState extends State<PurchaseFormSheet> {
                 Row(
                   children: [
                     Expanded(
-                      child: Text('Pieza ${i + 1}',
-                          style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: AppColors.asphalt, letterSpacing: .3)),
+                      child: Text('Pieza ${i + 1}', style: AppTypography.label.copyWith(color: c.textSecondary)),
                     ),
-                    InkWell(
-                      borderRadius: BorderRadius.circular(20),
-                      onTap: () => setState(() => _lines.removeAt(i)),
-                      child: const Padding(
-                        padding: EdgeInsets.all(2),
-                        child: Icon(Icons.close, size: 18, color: AppColors.asphalt),
+                    Semantics(
+                      button: true,
+                      label: 'Quitar pieza ${i + 1}',
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(20),
+                        onTap: () => setState(() => _lines.removeAt(i)),
+                        child: Padding(
+                          padding: const EdgeInsets.all(2),
+                          child: Icon(Icons.close, size: 18, color: c.textSecondary),
+                        ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.sm),
                 DropdownButtonFormField<String>(
                   value: line.category,
                   isExpanded: true,
                   decoration: const InputDecoration(labelText: 'Categoría'),
                   items: kProductCategories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
-                  onChanged: (c) => setState(() {
-                    if (c == null) return;
-                    line.category = c;
-                    final opts = _productsInCategory(app, c);
+                  onChanged: (cat) => setState(() {
+                    if (cat == null) return;
+                    line.category = cat;
+                    final opts = _productsInCategory(app, cat);
                     line.product = opts.isEmpty ? null : opts.first;
                   }),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.md),
                 DropdownButtonFormField<Product>(
                   value: line.product,
                   isExpanded: true,
@@ -165,7 +172,7 @@ class _PurchaseFormSheetState extends State<PurchaseFormSheet> {
                       .toList(),
                   onChanged: options.isEmpty ? null : (p) => setState(() => line.product = p),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.md),
                 Row(
                   children: [
                     Expanded(
@@ -176,9 +183,9 @@ class _PurchaseFormSheetState extends State<PurchaseFormSheet> {
                         onChanged: (v) => setState(() => line.cost = double.tryParse(v.replaceAll(',', '.')) ?? 0),
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: AppSpacing.sm),
                     SizedBox(
-                      width: 70,
+                      width: 76,
                       child: TextFormField(
                         initialValue: line.qty.toString(),
                         keyboardType: TextInputType.number,
@@ -192,44 +199,40 @@ class _PurchaseFormSheetState extends State<PurchaseFormSheet> {
             ),
           );
         }),
-        OutlinedButton.icon(
+        SecondaryButton(
+          label: 'Agregar pieza',
+          icon: Icons.add,
           onPressed: app.products.isEmpty ? null : () => _addLine(app),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.spicyRed,
-            side: const BorderSide(color: AppColors.lightBorder),
-            padding: const EdgeInsets.symmetric(vertical: 13),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-          icon: const Icon(Icons.add, size: 18),
-          label: const Text('Agregar pieza'),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: AppSpacing.xl),
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.lightBorder),
+            color: c.surface,
+            borderRadius: BorderRadius.circular(AppRadius.card),
+            border: Border.all(color: c.border),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Total estimado', style: TextStyle(color: AppColors.asphalt, fontSize: 13)),
+              Text('Total estimado', style: AppTypography.body.copyWith(color: c.textSecondary)),
               _isForeign
                   ? Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text(Formatters.usd(_totalRaw), style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900, fontStyle: FontStyle.italic)),
-                        Text(Formatters.money(_totalCrc), style: const TextStyle(fontSize: 12.5, color: AppColors.asphalt)),
+                        Text(Formatters.usd(_totalRaw), style: AppTypography.metric.copyWith(color: c.textPrimary, fontSize: 18)),
+                        Text(Formatters.money(_totalCrc), style: AppTypography.label.copyWith(color: c.textSecondary)),
                       ],
                     )
-                  : Text(Formatters.money(_totalCrc), style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900, fontStyle: FontStyle.italic)),
+                  : Text(Formatters.money(_totalCrc), style: AppTypography.metric.copyWith(color: c.textPrimary, fontSize: 18)),
             ],
           ),
         ),
-        const SizedBox(height: 18),
-        ElevatedButton(
-          onPressed: (_saving || _supplier == null || !_linesValid || (_isForeign && _rate <= 0))
+        const SizedBox(height: AppSpacing.xl),
+        PrimaryButton(
+          label: 'Crear orden',
+          loading: _saving,
+          onPressed: (_supplier == null || !_linesValid || (_isForeign && _rate <= 0))
               ? null
               : () async {
                   setState(() => _saving = true);
@@ -237,9 +240,7 @@ class _PurchaseFormSheetState extends State<PurchaseFormSheet> {
                     await app.createPurchase(
                       supplierId: _supplier!.id,
                       supplierName: _supplier!.name,
-                      lines: _lines
-                          .map((l) => PurchaseLine(product: l.product!, qty: l.qty, cost: l.cost))
-                          .toList(),
+                      lines: _lines.map((l) => PurchaseLine(product: l.product!, qty: l.qty, cost: l.cost)).toList(),
                       currency: _isForeign ? 'USD' : 'CRC',
                       exchangeRate: _rate,
                     );
@@ -248,9 +249,6 @@ class _PurchaseFormSheetState extends State<PurchaseFormSheet> {
                     if (mounted) setState(() => _saving = false);
                   }
                 },
-          child: _saving
-              ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-              : const Text('CREAR ORDEN'),
         ),
       ],
     );

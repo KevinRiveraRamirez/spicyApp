@@ -14,6 +14,8 @@ class Formatters {
   );
   static final _shortDate = DateFormat('d MMM', 'es_CR');
   static final _shortDateTime = DateFormat('d MMM · h:mm a', 'es_CR');
+  // Encabezado contextual del Inicio: "lunes 6 de septiembre".
+  static final _longDate = DateFormat('EEEE d \'de\' MMMM', 'es_CR');
 
   // Para compras a proveedores de China, que cotizan en dólares.
   static final _usd = NumberFormat.currency(locale: 'en_US', symbol: '\$', decimalDigits: 2);
@@ -28,4 +30,6 @@ class Formatters {
   static String shortDate(DateTime date) => _shortDate.format(date.toLocal());
 
   static String shortDateTime(DateTime date) => _shortDateTime.format(date.toLocal());
+
+  static String longDate(DateTime date) => _longDate.format(date.toLocal());
 }

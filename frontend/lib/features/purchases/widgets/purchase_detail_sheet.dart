@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_text.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../models/purchase.dart';
 import '../../../state/app_state.dart';
-import '../../../widgets/item_row.dart';
+import '../../../widgets/spicy_buttons.dart';
+import '../../../widgets/status_chip.dart';
 
 class PurchaseDetailSheet extends StatefulWidget {
   final Purchase purchase;
@@ -17,11 +20,14 @@ class PurchaseDetailSheet extends StatefulWidget {
 class _PurchaseDetailSheetState extends State<PurchaseDetailSheet> {
   bool _working = false;
 
-  Color _statusColor(PurchaseStatus s) => switch (s) {
-        PurchaseStatus.pedido => AppColors.asphalt,
-        PurchaseStatus.enTransito => AppColors.info,
-        PurchaseStatus.recibida => AppColors.success,
-      };
+  Color _statusColor(BuildContext context, PurchaseStatus s) {
+    final c = context.colors;
+    return switch (s) {
+      PurchaseStatus.pedido => c.textSecondary,
+      PurchaseStatus.enTransito => c.info,
+      PurchaseStatus.recibida => c.success,
+    };
+  }
 
   Future<void> _run(Future<void> Function() action) async {
     setState(() => _working = true);
@@ -36,7 +42,8 @@ class _PurchaseDetailSheetState extends State<PurchaseDetailSheet> {
   @override
   Widget build(BuildContext context) {
     final p = widget.purchase;
-    final color = _statusColor(p.status);
+    final c = context.colors;
+    final color = _statusColor(context, p.status);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -46,66 +53,71 @@ class _PurchaseDetailSheetState extends State<PurchaseDetailSheet> {
           children: [
             Expanded(
               child: Text('${p.supplierName} · ${Formatters.shortDate(p.orderedAt)}',
-                  style: const TextStyle(color: AppColors.asphalt, fontSize: 12.5)),
+                  style: AppTypography.label.copyWith(color: c.textSecondary)),
             ),
-            StatusChip(label: p.status.label, color: color, background: color.withOpacity(.12)),
+            StatusChip(label: p.status.label, color: color),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.md),
         ...p.items.map((it) => Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
               child: Row(
                 children: [
-                  Expanded(child: Text('${it.qty}× ${it.productName}', style: const TextStyle(fontSize: 13))),
+                  Expanded(child: Text('${it.qty}× ${it.productName}', style: AppTypography.body.copyWith(color: c.textPrimary))),
                   if (p.isUsd)
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text(Formatters.usd(it.subtotalUsd), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
-                        Text(Formatters.money(it.subtotal), style: const TextStyle(fontSize: 11, color: AppColors.asphalt)),
+                        Text(Formatters.usd(it.subtotalUsd), style: AppTypography.bodyMedium.copyWith(color: c.textPrimary, fontWeight: FontWeight.w700)),
+                        Text(Formatters.money(it.subtotal), style: AppTypography.label.copyWith(color: c.textSecondary)),
                       ],
                     )
                   else
-                    Text(Formatters.money(it.subtotal), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+                    Text(Formatters.money(it.subtotal), style: AppTypography.bodyMedium.copyWith(color: c.textPrimary, fontWeight: FontWeight.w700)),
                 ],
               ),
             )),
-        const Divider(height: 20),
+        const Divider(height: AppSpacing.xl),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('Total', style: TextStyle(color: AppColors.asphalt)),
+            Text('Total', style: AppTypography.body.copyWith(color: c.textSecondary)),
             if (p.isUsd)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(Formatters.usd(p.totalUsd), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, fontStyle: FontStyle.italic)),
+                  Text(Formatters.usd(p.totalUsd), style: AppTypography.metric.copyWith(color: c.textPrimary)),
                   Text('${Formatters.money(p.total)} · tipo de cambio ₡${p.exchangeRate.toStringAsFixed(2)}',
-                      style: const TextStyle(fontSize: 11.5, color: AppColors.asphalt)),
+                      style: AppTypography.label.copyWith(color: c.textSecondary)),
                 ],
               )
             else
-              Text(Formatters.money(p.total), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, fontStyle: FontStyle.italic)),
+              Text(Formatters.money(p.total), style: AppTypography.metric.copyWith(color: c.textPrimary)),
           ],
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: AppSpacing.lg),
         if (p.status == PurchaseStatus.pedido)
-          ElevatedButton(
-            onPressed: _working ? null : () => _run(() => context.read<AppState>().markPurchaseInTransit(p.id)),
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.info),
-            child: _working
-                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                : const Text('MARCAR EN TRÁNSITO'),
+          PrimaryButton(
+            label: 'Marcar en tránsito',
+            icon: Icons.flight_takeoff_outlined,
+            loading: _working,
+            onPressed: () => _run(() => context.read<AppState>().markPurchaseInTransit(p.id)),
           )
         else if (p.status == PurchaseStatus.enTransito)
-          ElevatedButton(
-            onPressed: _working ? null : () => _run(() => context.read<AppState>().receivePurchase(p.id)),
-            child: _working
-                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                : const Text('MARCAR COMO RECIBIDA'),
+          PrimaryButton(
+            label: 'Marcar como recibida',
+            icon: Icons.inventory_2_outlined,
+            loading: _working,
+            onPressed: () => _run(() => context.read<AppState>().receivePurchase(p.id)),
           )
         else
-          const Text('✅ Mercancía recibida en bodega', style: TextStyle(color: AppColors.asphalt, fontSize: 12.5)),
+          Row(
+            children: [
+              Icon(Icons.check_circle_outline, size: 18, color: c.success),
+              const SizedBox(width: AppSpacing.sm),
+              Text('Mercancía recibida en bodega', style: AppTypography.body.copyWith(color: c.textSecondary)),
+            ],
+          ),
       ],
     );
   }

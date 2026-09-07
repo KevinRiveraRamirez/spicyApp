@@ -1,63 +1,95 @@
 import 'package:flutter/material.dart';
 import '../core/theme/app_colors.dart';
+import '../core/theme/app_spacing.dart';
+import '../core/theme/app_text.dart';
 
-/// Envoltorio estándar para todos los bottom sheets de la app
-/// (formularios de producto, venta, compra, gasto, detalle, etc.)
-class AppBottomSheet extends StatelessWidget {
+/// Hoja inferior estándar de la app: usada para todos los formularios
+/// (producto, venta, compra, gasto, proveedor, detalle, ajustes...).
+/// A pantalla casi completa en móvil, con [stickyFooter] opcional que
+/// queda fijo justo sobre el teclado (para el botón principal, ej.
+/// "COBRAR ₡12.500") en vez de scrollear junto con el formulario.
+class SpicyBottomSheet extends StatelessWidget {
   final String title;
   final Widget child;
+  final Widget? stickyFooter;
 
-  const AppBottomSheet({super.key, required this.title, required this.child});
+  const SpicyBottomSheet({super.key, required this.title, required this.child, this.stickyFooter});
 
-  static Future<T?> show<T>(BuildContext context, {required String title, required Widget child}) {
+  static Future<T?> show<T>(
+    BuildContext context, {
+    required String title,
+    required Widget child,
+    Widget? stickyFooter,
+  }) {
     return showModalBottomSheet<T>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => AppBottomSheet(title: title, child: child),
+      // Duración de apertura dentro del rango 260-320ms del sistema de
+      // movimiento (el valor por defecto de Material ya cae en ese
+      // rango con curva decelerate, muy cercana a easeOutCubic).
+      builder: (_) => SpicyBottomSheet(title: title, stickyFooter: stickyFooter, child: child),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final c = context.colors;
+    final viewInsets = MediaQuery.of(context).viewInsets.bottom;
+
     return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding: EdgeInsets.only(bottom: viewInsets),
       child: Container(
-        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * .88),
+        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * .92),
         decoration: BoxDecoration(
-          color: isDark ? AppColors.darkBg : AppColors.lightBg,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
+          color: c.background,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.sheet)),
         ),
-        padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Center(
-                child: Container(
-                  width: 38, height: 4, margin: const EdgeInsets.only(bottom: 14),
-                  decoration: BoxDecoration(
-                    color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-              ),
-              Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 10),
+            Container(
+              width: 38,
+              height: 4,
+              decoration: BoxDecoration(color: c.border, borderRadius: BorderRadius.circular(4)),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.md, AppSpacing.md, 0),
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(title, style: Theme.of(context).textTheme.headlineMedium),
+                  Text(title, style: AppTypography.screenTitle.copyWith(color: c.textPrimary, fontSize: 18)),
                   IconButton(
+                    tooltip: 'Cerrar',
                     onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close),
+                    icon: Icon(Icons.close, color: c.textSecondary),
                   ),
                 ],
               ),
-              const SizedBox(height: 6),
-              child,
-            ],
-          ),
+            ),
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.sm, AppSpacing.xl, AppSpacing.xl),
+                child: child,
+              ),
+            ),
+            if (stickyFooter != null)
+              Container(
+                padding: EdgeInsets.fromLTRB(
+                  AppSpacing.xl,
+                  AppSpacing.md,
+                  AppSpacing.xl,
+                  AppSpacing.md + MediaQuery.of(context).padding.bottom,
+                ),
+                decoration: BoxDecoration(
+                  color: c.background,
+                  border: Border(top: BorderSide(color: c.border)),
+                ),
+                child: stickyFooter,
+              ),
+          ],
         ),
       ),
     );

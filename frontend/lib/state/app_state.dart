@@ -22,6 +22,11 @@ class AppState extends ChangeNotifier {
 
   bool isLoading = false;
   bool darkMode = false;
+  // Mensaje amigable si la última carga falló (conexión, Supabase
+  // pausado, etc.) — puramente informativo, no cambia el resto del
+  // flujo. Las pantallas lo usan para mostrar un ErrorState con
+  // "Reintentar" en vez de quedarse en blanco.
+  String? loadError;
 
   List<Product> products = [];
   List<Supplier> suppliers = [];
@@ -31,6 +36,7 @@ class AppState extends ChangeNotifier {
 
   Future<void> loadAll() async {
     isLoading = true;
+    loadError = null;
     notifyListeners();
     try {
       final results = await Future.wait([
@@ -45,6 +51,8 @@ class AppState extends ChangeNotifier {
       sales = results[2] as List<Sale>;
       purchases = results[3] as List<Purchase>;
       expenses = results[4] as List<Expense>;
+    } catch (_) {
+      loadError = 'No se pudo cargar la información. Revisa tu conexión e intenta de nuevo.';
     } finally {
       isLoading = false;
       notifyListeners();
@@ -76,11 +84,14 @@ class AppState extends ChangeNotifier {
   }
 
   // ---- Ventas ----
-  Future<void> registerSale({
+  /// Registra la venta y devuelve el registro ya creado (para que la
+  /// pantalla de confirmación pueda ofrecer "ver detalle" de esta
+  /// venta exacta, sin adivinar cuál es en la lista recién recargada).
+  Future<Sale> registerSale({
     required List<CartLine> lines,
     required String paymentMethod,
   }) async {
-    await _salesService.registerSale(lines: lines, paymentMethod: paymentMethod);
+    final newSaleId = await _salesService.registerSale(lines: lines, paymentMethod: paymentMethod);
     // Refresca ventas y productos (el stock cambió en el servidor).
     final results = await Future.wait([
       _salesService.fetchAll(),
@@ -89,6 +100,7 @@ class AppState extends ChangeNotifier {
     sales = results[0] as List<Sale>;
     products = results[1] as List<Product>;
     notifyListeners();
+    return sales.firstWhere((s) => s.id == newSaleId, orElse: () => sales.first);
   }
 
   // ---- Compras ----

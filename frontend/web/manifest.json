@@ -1,11 +1,11 @@
 {
-    "name": "spicy_admin",
-    "short_name": "spicy_admin",
+    "name": "SPICY Admin",
+    "short_name": "SPICY Admin",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#F5F7FB",
+    "theme_color": "#003BFD",
+    "description": "SPICY Streetwear Co. — inventario, ventas, compras y finanzas.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

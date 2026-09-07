@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../core/theme/app_spacing.dart';
 import '../../../models/expense.dart';
 import '../../../state/app_state.dart';
+import '../../../widgets/spicy_buttons.dart';
 
 const kExpenseCategories = ['Compra', 'Venta', 'Marketing', 'Transporte/Envíos', 'Otro'];
 
@@ -29,13 +31,15 @@ class _ExpenseFormSheetState extends State<ExpenseFormSheet> {
           items: kExpenseCategories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
           onChanged: (v) => setState(() => _category = v ?? _category),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.md),
         TextField(controller: _desc, decoration: const InputDecoration(labelText: 'Descripción (opcional)')),
-        const SizedBox(height: 12),
-        TextField(controller: _amount, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Monto')),
-        const SizedBox(height: 18),
-        ElevatedButton(
-          onPressed: _saving
+        const SizedBox(height: AppSpacing.md),
+        TextField(controller: _amount, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Monto'), onChanged: (_) => setState(() {})),
+        const SizedBox(height: AppSpacing.xl),
+        PrimaryButton(
+          label: 'Guardar',
+          loading: _saving,
+          onPressed: (double.tryParse(_amount.text) ?? 0) <= 0
               ? null
               : () async {
                   final amount = double.tryParse(_amount.text) ?? 0;
@@ -54,9 +58,6 @@ class _ExpenseFormSheetState extends State<ExpenseFormSheet> {
                     if (mounted) setState(() => _saving = false);
                   }
                 },
-          child: _saving
-              ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-              : const Text('GUARDAR'),
         ),
       ],
     );

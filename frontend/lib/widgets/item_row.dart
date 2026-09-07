@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import '../core/theme/app_colors.dart';
+import '../core/theme/app_spacing.dart';
+import '../core/theme/app_text.dart';
 
-/// Fila de lista reutilizable: icono/emoji + título + subtítulo +
-/// contenido a la derecha (precio, chip de estado, etc.)
+/// Fila de lista reutilizable: icono + título + subtítulo + contenido
+/// a la derecha (precio, chip de estado, etc.) Objetivo táctil de al
+/// menos 48dp de alto.
 class ItemRow extends StatelessWidget {
   final Widget leading;
   final String title;
@@ -21,80 +24,75 @@ class ItemRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
-        ),
-        child: Row(
-          children: [
-            leading,
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleMedium),
-                  const SizedBox(height: 2),
-                  Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
-                ],
-              ),
+    final c = context.colors;
+    return Semantics(
+      button: onTap != null,
+      label: '$title, $subtitle',
+      child: Material(
+        color: c.surface,
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          child: Container(
+            constraints: const BoxConstraints(minHeight: AppSizes.minTouchTarget),
+            margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppRadius.card),
+              border: Border.all(color: c.border),
             ),
-            if (trailing != null) trailing!,
-          ],
+            child: Row(
+              children: [
+                leading,
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.bodyMedium.copyWith(color: c.textPrimary, fontWeight: FontWeight.w700)),
+                      const SizedBox(height: 2),
+                      Text(subtitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.label.copyWith(color: c.textSecondary, fontWeight: FontWeight.w500)),
+                    ],
+                  ),
+                ),
+                if (trailing != null) ...[const SizedBox(width: AppSpacing.sm), trailing!],
+              ],
+            ),
+          ),
         ),
       ),
     );
   }
 }
 
-/// Miniatura circular/redondeada con emoji o ícono, usada como "leading".
+/// Miniatura cuadrada redondeada con un icono Material — usada como
+/// "leading" en [ItemRow] (piezas, ventas, compras, proveedores).
 class ItemThumb extends StatelessWidget {
-  final String emoji;
+  final IconData icon;
   final Color? background;
+  final Color? foreground;
 
-  const ItemThumb({super.key, required this.emoji, this.background});
+  const ItemThumb({super.key, required this.icon, this.background, this.foreground});
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final c = context.colors;
     return Container(
-      width: 46,
-      height: 46,
+      width: 44,
+      height: 44,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: background ?? (isDark ? AppColors.darkSurfaceAlt : AppColors.lightSurfaceAlt),
-        borderRadius: BorderRadius.circular(11),
+        color: background ?? c.surfaceAlt,
+        borderRadius: BorderRadius.circular(AppRadius.control),
       ),
-      child: Text(emoji, style: const TextStyle(fontSize: 20)),
-    );
-  }
-}
-
-/// Chip de estado (stock ok/bajo/agotado, orden pendiente/recibida, etc.)
-class StatusChip extends StatelessWidget {
-  final String label;
-  final Color color;
-  final Color background;
-
-  const StatusChip({super.key, required this.label, required this.color, required this.background});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(color: background, borderRadius: BorderRadius.circular(20)),
-      child: Text(label, style: TextStyle(color: color, fontSize: 10.5, fontWeight: FontWeight.w700)),
+      child: Icon(icon, size: 20, color: foreground ?? c.textPrimary),
     );
   }
 }

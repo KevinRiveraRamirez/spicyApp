@@ -40,10 +40,16 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/images/spicy_logo_white.png
+    - assets/images/spicy_wordmark_blue.png
+    - assets/images/spicy_wordmark_white.png
+    - assets/images/spicy_monogram_blue.png
+    - assets/images/spicy_monogram_white.png
 
+# Identidad "SPICY Tech-Speed" (rediseño 2026): icono de app = monograma
+# S blanco sobre azul de marca. Regenerar con:
+#   dart run flutter_launcher_icons
 flutter_launcher_icons:
   android: true
-  image_path: "assets/images/spicy_logo_white.png"
-  adaptive_icon_background: "#E4131A"
-  adaptive_icon_foreground: "assets/images/spicy_logo_white.png"
+  image_path: "assets/images/spicy_app_icon_1024.png"
+  adaptive_icon_background: "#003BFD"
+  adaptive_icon_foreground: "assets/images/spicy_monogram_white.png"

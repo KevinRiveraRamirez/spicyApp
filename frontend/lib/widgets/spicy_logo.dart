@@ -1,47 +1,41 @@
 import 'package:flutter/material.dart';
 
-/// Wordmark oficial de SPICY: la palabra "SPICY" fracturada en blanco,
-/// atravesada por un destello. Según el manual de marca, es de uso
-/// preferente sobre fondo rojo — por eso este widget casi siempre va
-/// dentro de un contenedor rojo (ver [SpicyLogoBadge]).
-class SpicyLogo extends StatelessWidget {
+/// Wordmark "SPICY Tech-Speed": la S angular en la palabra completa.
+/// De uso preferente en acceso y encabezados amplios. [blue] controla
+/// si se pinta en azul de marca (sobre fondos claros) o en blanco
+/// (sobre fondos oscuros/azules) — nunca degradados ni sombras.
+class SpicyWordmark extends StatelessWidget {
   final double width;
-  const SpicyLogo({super.key, this.width = 160});
+  final bool blue;
+
+  const SpicyWordmark({super.key, this.width = 160, this.blue = true});
 
   @override
   Widget build(BuildContext context) {
     return Image.asset(
-      'assets/images/spicy_logo_white.png',
+      blue ? 'assets/images/spicy_wordmark_blue.png' : 'assets/images/spicy_wordmark_white.png',
       width: width,
       fit: BoxFit.contain,
     );
   }
 }
 
-/// El wordmark envuelto en una tarjeta roja redondeada — la variación
-/// "PRINCIPAL · SOBRE ROJO" del manual, lista para usar en cualquier
-/// fondo (claro u oscuro) sin perder contraste.
-class SpicyLogoBadge extends StatelessWidget {
-  final double logoWidth;
-  final EdgeInsets padding;
-  final BorderRadius? borderRadius;
+/// Monograma "S" — la variación compacta del wordmark, para navegación,
+/// avatar, favicon y etiquetas pequeñas donde no cabe la palabra
+/// completa.
+class SpicyMonogram extends StatelessWidget {
+  final double size;
+  final bool blue;
 
-  const SpicyLogoBadge({
-    super.key,
-    this.logoWidth = 120,
-    this.padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-    this.borderRadius,
-  });
+  const SpicyMonogram({super.key, this.size = 32, this.blue = true});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: padding,
-      decoration: BoxDecoration(
-        color: const Color(0xFFE4131A),
-        borderRadius: borderRadius ?? BorderRadius.circular(14),
-      ),
-      child: SpicyLogo(width: logoWidth),
+    return Image.asset(
+      blue ? 'assets/images/spicy_monogram_blue.png' : 'assets/images/spicy_monogram_white.png',
+      width: size,
+      height: size,
+      fit: BoxFit.contain,
     );
   }
 }

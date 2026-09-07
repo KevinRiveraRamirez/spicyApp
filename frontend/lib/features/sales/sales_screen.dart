@@ -1,22 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_spacing.dart';
+import '../../core/theme/app_text.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/utils/metrics.dart';
+import '../../models/sale.dart';
 import '../../state/app_state.dart';
 import '../../widgets/app_bottom_sheet.dart';
-import '../../widgets/brand_card.dart';
 import '../../widgets/brand_screen.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/filter_chip_group.dart';
 import '../../widgets/item_row.dart';
-import '../dashboard/widgets/kpi_card.dart';
+import '../../widgets/metric_card.dart';
+import '../../widgets/section_header.dart';
 import 'widgets/pos_sheet.dart';
 import 'widgets/sale_detail_sheet.dart';
 
-/// Ventas: mismo tratamiento de marca que Dashboard/Inventario (fondo
-/// rojo de borde a borde vía [BrandScreen]). Los 3 KPI van arriba
-/// (fila fija en tablet/PC, scroll horizontal en teléfono, igual que
-/// el Dashboard); cada venta es su propia cajita blanca apilada.
+const _kPeriods = ['Todos', 'Hoy', '7 días', '30 días'];
+const _kMethods = ['Todos', 'Efectivo', 'Sinpe', 'Transferencia'];
+
+/// Ventas: 3 KPIs arriba, historial con filtros por periodo y método
+/// de pago. La acción principal ("Nueva venta") vive en el FAB del
+/// shell — este flujo es un asistente por pasos (ver [PosController]).
 class SalesScreen extends StatefulWidget {
   const SalesScreen({super.key});
 
@@ -25,76 +31,95 @@ class SalesScreen extends StatefulWidget {
 }
 
 class SalesScreenState extends State<SalesScreen> {
+  String _period = 'Todos';
+  String _method = 'Todos';
+
   void openNewSaleSheet() {
-    AppBottomSheet.show(context, title: 'Nueva venta', child: const PosSheet());
+    final app = context.read<AppState>();
+    final controller = PosController(app);
+    SpicyBottomSheet.show(
+      context,
+      title: 'Punto de venta',
+      child: PosBody(controller: controller),
+      stickyFooter: PosFooter(controller: controller),
+    );
+  }
+
+  bool _inPeriod(Sale s) {
+    if (_period == 'Todos') return true;
+    final days = switch (_period) {
+      'Hoy' => 1,
+      '7 días' => 7,
+      '30 días' => 30,
+      _ => 100000,
+    };
+    return Metrics.salesInLastDays([s], days).isNotEmpty;
   }
 
   @override
   Widget build(BuildContext context) {
     final app = context.watch<AppState>();
+    final c = context.colors;
     final today = Metrics.salesInLastDays(app.sales, 1);
     final week = Metrics.salesInLastDays(app.sales, 7);
     final avg = Metrics.averageTicket(app.sales);
-    final list = app.sales;
 
-    final screenWidth = MediaQuery.sizeOf(context).width;
-    final isWide = screenWidth >= 700;
+    var list = app.sales.where(_inPeriod).toList();
+    if (_method != 'Todos') list = list.where((s) => s.paymentMethod == _method).toList();
 
-    final kpiData = [
-      (label: 'Hoy', value: Formatters.money(Metrics.sumSales(today))),
-      (label: 'Esta semana', value: Formatters.money(Metrics.sumSales(week))),
-      (label: 'Ticket promedio', value: Formatters.money(avg)),
+    final width = MediaQuery.sizeOf(context).width;
+    final isWide = width >= AppSizes.breakpointTablet;
+
+    final metrics = [
+      MetricCard(label: 'Hoy', value: Formatters.money(Metrics.sumSales(today)), icon: Icons.today_outlined, width: isWide ? null : 150),
+      MetricCard(label: 'Esta semana', value: Formatters.money(Metrics.sumSales(week)), icon: Icons.calendar_view_week_outlined, width: isWide ? null : 150),
+      MetricCard(label: 'Ticket promedio', value: Formatters.money(avg), icon: Icons.receipt_long_outlined, width: isWide ? null : 150),
     ];
 
-    final Widget kpiRow = isWide
-        ? Row(
-            children: [
-              for (int i = 0; i < kpiData.length; i++) ...[
-                if (i > 0) const SizedBox(width: 12),
-                Expanded(
-                  child: KpiCard(
-                    label: kpiData[i].label,
-                    value: kpiData[i].value,
-                    width: null,
-                    margin: EdgeInsets.zero,
-                  ),
-                ),
-              ],
-            ],
-          )
+    final metricsRow = isWide
+        ? Row(children: [for (int i = 0; i < metrics.length; i++) ...[if (i > 0) const SizedBox(width: AppSpacing.md), Expanded(child: metrics[i])]])
         : SizedBox(
-            height: 90,
-            child: ListView(
+            height: 108,
+            child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              children: [
-                for (final k in kpiData) KpiCard(label: k.label, value: k.value),
-              ],
+              itemCount: metrics.length,
+              separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
+              itemBuilder: (_, i) => metrics[i],
             ),
           );
 
-    return BrandScreen(
+    Widget history;
+    if (app.isLoading && app.sales.isEmpty) {
+      history = const SizedBox.shrink();
+    } else if (app.sales.isEmpty) {
+      history = const EmptyState(icon: Icons.receipt_long_outlined, title: 'Cero ventas aún', subtitle: 'Toca "Nueva venta" para registrar la primera');
+    } else if (list.isEmpty) {
+      history = const EmptyState(icon: Icons.filter_alt_off_outlined, title: 'Sin ventas con estos filtros');
+    } else {
+      history = Column(
+        children: list
+            .map((s) => ItemRow(
+                  leading: ItemThumb(icon: Icons.receipt_long_outlined, foreground: c.success, background: c.success.withOpacity(.1)),
+                  title: '${s.items.length} artículo(s) · ${s.paymentMethod}',
+                  subtitle: Formatters.shortDateTime(s.soldAt),
+                  trailing: Text(Formatters.money(s.total), style: AppTypography.bodyMedium.copyWith(color: c.textPrimary, fontWeight: FontWeight.w700)),
+                  onTap: () => SaleDetailSheet.open(context, s),
+                ))
+            .toList(),
+      );
+    }
+
+    return SpicyScreen(
       onRefresh: app.loadAll,
-      // Igual que Inventario: sin centrado vertical (solo el Dashboard
-      // lo usa). Aquí la lista queda fija arriba.
-      centerWhenShort: false,
       children: [
-        kpiRow,
-        const SizedBox(height: 18),
-        const Text('Historial de ventas',
-            style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w800)),
-        const SizedBox(height: 10),
-        if (list.isEmpty)
-          const BrandCard(
-            child: EmptyState(emoji: '🧾', title: 'Cero ventas aún', subtitle: 'Toca + y registra la primera'),
-          )
-        else
-          ...list.map((s) => ItemRow(
-                leading: ItemThumb(emoji: '🧾', background: AppColors.success.withOpacity(.12)),
-                title: '${s.items.length} artículo(s) · ${s.paymentMethod}',
-                subtitle: Formatters.shortDateTime(s.soldAt),
-                trailing: Text(Formatters.money(s.total), style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5)),
-                onTap: () => AppBottomSheet.show(context, title: 'Detalle de venta', child: SaleDetailSheet(sale: s)),
-              )),
+        metricsRow,
+        const SizedBox(height: AppSpacing.lg),
+        const SectionHeader(title: 'Historial de ventas'),
+        FilterChipGroup(options: _kPeriods, selected: _period, onSelected: (v) => setState(() => _period = v)),
+        const SizedBox(height: AppSpacing.sm),
+        FilterChipGroup(options: _kMethods, selected: _method, onSelected: (v) => setState(() => _method = v)),
+        const SizedBox(height: AppSpacing.md),
+        history,
       ],
     );
   }

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
-/// Teclado numérico circular para el PIN de 4 dígitos, estilo pantalla
-/// de bloqueo de SPICY (fondo rojo, botones translúcidos).
+/// Teclado numérico para el PIN de 4 dígitos — optimizado para usarse
+/// con una sola mano: botones circulares de 60dp (por encima del
+/// mínimo de 56dp pedido) con respuesta háptica ligera en cada toque.
 ///
 /// Cuadrícula FIJA de 3 columnas x 4 filas (1-9, vacío, 0, borrar) —
 /// construida con Column/Row en vez de Wrap para que la forma nunca
@@ -55,15 +57,17 @@ class _PinRow extends StatelessWidget {
   }
 
   Widget _buildKey(String k) {
-    if (k.isEmpty) return const SizedBox(width: 64, height: 64);
+    if (k.isEmpty) return const SizedBox(width: 60, height: 60);
     if (k == 'del') {
       return _PinKey(
         ghost: true,
+        label: 'Borrar',
         onTap: onDelete,
         child: const Icon(Icons.backspace_outlined, color: Colors.white, size: 20),
       );
     }
     return _PinKey(
+      label: 'Dígito $k',
       onTap: () => onDigit(k),
       child: Text(k, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w700)),
     );
@@ -74,23 +78,31 @@ class _PinKey extends StatelessWidget {
   final Widget child;
   final VoidCallback onTap;
   final bool ghost;
-  const _PinKey({required this.child, required this.onTap, this.ghost = false});
+  final String label;
+  const _PinKey({required this.child, required this.onTap, required this.label, this.ghost = false});
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      customBorder: const CircleBorder(),
-      child: Container(
-        width: 64,
-        height: 64,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: ghost ? Colors.transparent : Colors.white.withOpacity(.08),
-          border: ghost ? null : Border.all(color: Colors.white.withOpacity(.25)),
+    return Semantics(
+      button: true,
+      label: label,
+      child: InkWell(
+        onTap: () {
+          HapticFeedback.lightImpact();
+          onTap();
+        },
+        customBorder: const CircleBorder(),
+        child: Container(
+          width: 60,
+          height: 60,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: ghost ? Colors.transparent : Colors.white.withOpacity(.10),
+            border: ghost ? null : Border.all(color: Colors.white.withOpacity(.28)),
+          ),
+          child: child,
         ),
-        child: child,
       ),
     );
   }
@@ -104,22 +116,25 @@ class PinDots extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: List.generate(4, (i) {
-        final isFilled = i < filled;
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          margin: const EdgeInsets.symmetric(horizontal: 8),
-          width: 14,
-          height: 14,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: isFilled || error ? Colors.white : Colors.transparent,
-            border: Border.all(color: Colors.white.withOpacity(.6), width: 2),
-          ),
-        );
-      }),
+    return Semantics(
+      label: error ? 'PIN incorrecto' : '$filled de 4 dígitos ingresados',
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: List.generate(4, (i) {
+          final isFilled = i < filled;
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            margin: const EdgeInsets.symmetric(horizontal: 8),
+            width: 14,
+            height: 14,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: isFilled || error ? Colors.white : Colors.transparent,
+              border: Border.all(color: Colors.white.withOpacity(.6), width: 2),
+            ),
+          );
+        }),
+      ),
     );
   }
 }
