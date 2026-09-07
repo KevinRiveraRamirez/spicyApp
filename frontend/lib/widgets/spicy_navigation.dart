@@ -98,12 +98,12 @@ class SpicyNavigation extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.xl, AppSpacing.lg, AppSpacing.lg),
+            padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.sm),
             child: sidebarExpanded
-                ? SpicyWordmark(width: 96)
-                : const Center(child: SpicyMonogram(size: 28)),
+                ? const SpicyWordmark(width: 76)
+                : const Center(child: SpicyMonogram(size: 26)),
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.sm),
           for (int i = 0; i < destinations.length; i++) _sidebarItem(context, i),
           const Spacer(),
           if (onToggleSidebar != null)
@@ -126,10 +126,17 @@ class SpicyNavigation extends StatelessWidget {
     final c = context.colors;
     final d = destinations[i];
     final active = i == selectedIndex;
+    // El icono va en una caja de ancho fijo (24) para que TODOS los
+    // destinos —incluido "Ventas"— queden alineados exactamente igual,
+    // sin importar el ancho intrínseco del glifo dibujado.
     final content = Row(
       children: [
         const SizedBox(width: AppSpacing.lg),
-        Icon(active ? d.activeIcon : d.icon, size: 22, color: active ? c.brandPrimary : c.textSecondary),
+        SizedBox(
+          width: 24,
+          height: 24,
+          child: Icon(active ? d.activeIcon : d.icon, size: 22, color: active ? c.brandPrimary : c.textSecondary),
+        ),
         if (sidebarExpanded) ...[
           const SizedBox(width: AppSpacing.md),
           Expanded(

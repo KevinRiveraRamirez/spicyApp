@@ -35,3 +35,50 @@ class SpicyTopBar extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 }
+
+/// Barra superior "integrada": para escritorio, en vez de un [AppBar]
+/// que cruza TODO el ancho de la pantalla (incluida la barra lateral,
+/// duplicando visualmente el título de la pantalla contra el saludo o
+/// encabezado propio del contenido), esta barra vive dentro de la
+/// columna de contenido — a la derecha del sidebar, sin cruzarlo.
+/// Junta en un solo lugar: título de pantalla (si aplica), botón de
+/// acción principal y accesos de configuración/bloqueo.
+class SpicyContentHeader extends StatelessWidget {
+  final String? title;
+  final Widget? primaryAction;
+  final List<Widget> actions;
+
+  const SpicyContentHeader({super.key, this.title, this.primaryAction, this.actions = const []});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Container(
+      height: AppSizes.contentHeaderHeight,
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
+      decoration: BoxDecoration(
+        color: c.background,
+        border: Border(bottom: BorderSide(color: c.border)),
+      ),
+      child: Row(
+        children: [
+          if (title != null)
+            Expanded(
+              child: Text(
+                title!,
+                style: AppTypography.screenTitle.copyWith(color: c.textPrimary),
+                overflow: TextOverflow.ellipsis,
+              ),
+            )
+          else
+            const Spacer(),
+          if (primaryAction != null) ...[
+            primaryAction!,
+            const SizedBox(width: AppSpacing.md),
+          ],
+          ...actions,
+        ],
+      ),
+    );
+  }
+}

@@ -52,6 +52,8 @@ class DashboardScreen extends StatelessWidget {
           Text(greeting, style: AppTypography.display.copyWith(color: c.textPrimary, fontSize: isWide ? 28 : 24)),
           const SizedBox(height: 2),
           Text(dateLabel, style: AppTypography.body.copyWith(color: c.textSecondary)),
+          const SizedBox(height: 2),
+          Text('Aquí tienes el resumen de tu negocio', style: AppTypography.label.copyWith(color: c.textSecondary, fontWeight: FontWeight.w500)),
         ],
       ),
     );

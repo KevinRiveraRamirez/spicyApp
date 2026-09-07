@@ -45,29 +45,30 @@ class MetricCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppRadius.card),
           child: Container(
             width: width,
-            padding: const EdgeInsets.all(AppSpacing.lg),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(AppRadius.card),
               border: Border.all(color: c.border),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Row(
                   children: [
-                    Icon(icon, size: 18, color: c.textSecondary),
-                    const SizedBox(width: AppSpacing.sm),
+                    Icon(icon, size: 16, color: c.textSecondary),
+                    const SizedBox(width: AppSpacing.xs),
                     Expanded(
                       child: Text(
                         label,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: AppTypography.label.copyWith(color: c.textSecondary),
+                        style: AppTypography.label.copyWith(color: c.textSecondary, fontWeight: FontWeight.w600),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: AppSpacing.sm),
+                const SizedBox(height: 6),
                 Text(
                   value,
                   maxLines: 1,

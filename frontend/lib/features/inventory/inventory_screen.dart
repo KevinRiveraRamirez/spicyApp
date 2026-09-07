@@ -68,10 +68,13 @@ class InventoryScreenState extends State<InventoryScreen> {
     if (app.isLoading && app.products.isEmpty) {
       body = Column(children: List.generate(5, (_) => const ItemRowSkeleton()));
     } else if (app.products.isEmpty) {
-      body = const EmptyState(
+      body = EmptyState(
         icon: Icons.inventory_2_outlined,
-        title: 'Sin piezas todavía',
-        subtitle: 'Agrega la primera con el botón "Agregar producto"',
+        title: 'Tu inventario está vacío',
+        subtitle: 'Agrega tu primera pieza para empezar a controlar stock, costos y precios',
+        actionLabel: 'Agregar primer producto',
+        actionIcon: Icons.add,
+        onAction: openNewProductSheet,
       );
     } else if (list.isEmpty) {
       body = EmptyState(

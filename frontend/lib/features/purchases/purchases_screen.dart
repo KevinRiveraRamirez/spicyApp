@@ -13,6 +13,7 @@ import '../../widgets/app_bottom_sheet.dart';
 import '../../widgets/brand_screen.dart';
 import '../../widgets/confirm_dialog.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/filter_chip_group.dart';
 import '../../widgets/item_row.dart';
 import '../../widgets/metric_card.dart';
 import '../../widgets/section_header.dart';
@@ -21,6 +22,7 @@ import 'widgets/purchase_form_sheet.dart';
 import 'widgets/supplier_form_sheet.dart';
 
 const _kOriginFlags = {'China': '🇨🇳', 'Estados Unidos': '🇺🇸', 'Costa Rica': '🇨🇷'};
+const _kStatuses = ['Todas', 'Pedido', 'En tránsito', 'Recibida'];
 
 /// Compras: refleja el flujo real del negocio (Pedido → En tránsito →
 /// Recibida), con resumen de estado arriba y "Órdenes" / "Proveedores"
@@ -33,6 +35,8 @@ class PurchasesScreen extends StatefulWidget {
 }
 
 class PurchasesScreenState extends State<PurchasesScreen> {
+  String _status = 'Todas';
+
   void openNewPurchaseSheet() {
     SpicyBottomSheet.show(context, title: 'Nueva orden de compra', child: const PurchaseFormSheet());
   }
@@ -72,12 +76,13 @@ class PurchasesScreenState extends State<PurchasesScreen> {
   Widget build(BuildContext context) {
     final app = context.watch<AppState>();
     final c = context.colors;
-    final list = app.purchases;
+    final allPurchases = app.purchases;
+    final list = _status == 'Todas' ? allPurchases : allPurchases.where((p) => p.status.label == _status).toList();
 
-    final pedidos = list.where((p) => p.status == PurchaseStatus.pedido).length;
-    final enTransito = list.where((p) => p.status == PurchaseStatus.enTransito).length;
+    final pedidos = allPurchases.where((p) => p.status == PurchaseStatus.pedido).length;
+    final enTransito = allPurchases.where((p) => p.status == PurchaseStatus.enTransito).length;
     final porRecibir = pedidos + enTransito;
-    final invertido30 = Metrics.sumPurchases(list, 30);
+    final invertido30 = Metrics.sumPurchases(allPurchases, 30);
 
     final width = MediaQuery.sizeOf(context).width;
     final isWide = width >= AppSizes.breakpointTablet;
@@ -102,11 +107,19 @@ class PurchasesScreenState extends State<PurchasesScreen> {
           );
 
     Widget ordersSection;
-    if (list.isEmpty) {
-      ordersSection = const EmptyState(
+    if (allPurchases.isEmpty) {
+      ordersSection = EmptyState(
         icon: Icons.local_shipping_outlined,
-        title: 'Sin órdenes registradas',
-        subtitle: 'Toca "Nueva compra" para pedir a tu proveedor',
+        title: 'No hay órdenes activas',
+        subtitle: 'Crea tu primera orden para pedirle a un proveedor',
+        actionLabel: 'Crear primera compra',
+        actionIcon: Icons.add,
+        onAction: openNewPurchaseSheet,
+      );
+    } else if (list.isEmpty) {
+      ordersSection = const EmptyState(
+        icon: Icons.filter_alt_off_outlined,
+        title: 'Sin órdenes con este estado',
       );
     } else {
       ordersSection = Column(
@@ -168,10 +181,13 @@ class PurchasesScreenState extends State<PurchasesScreen> {
 
     Widget suppliersSection;
     if (app.suppliers.isEmpty) {
-      suppliersSection = const EmptyState(
+      suppliersSection = EmptyState(
         icon: Icons.factory_outlined,
         title: 'Sin proveedores',
         subtitle: 'Agrega tu primer proveedor de China, EE. UU. o Costa Rica',
+        actionLabel: 'Agregar proveedor',
+        actionIcon: Icons.add,
+        onAction: () => SpicyBottomSheet.show(context, title: 'Nuevo proveedor', child: const SupplierFormSheet()),
       );
     } else {
       suppliersSection = Column(
@@ -210,6 +226,11 @@ class PurchasesScreenState extends State<PurchasesScreen> {
         metricsRow,
         const SizedBox(height: AppSpacing.lg),
         const SectionHeader(title: 'Órdenes de compra'),
+        if (allPurchases.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.xs),
+          FilterChipGroup(options: _kStatuses, selected: _status, onSelected: (v) => setState(() => _status = v)),
+          const SizedBox(height: AppSpacing.sm),
+        ],
         ordersSection,
         const SizedBox(height: AppSpacing.xl),
         SectionHeader(

@@ -51,7 +51,9 @@ const _kPeriods = ['Todos', 'Hoy', '7 días', '30 días'];
 /// compras automáticas + gastos manuales) con filtros por tipo y
 /// periodo.
 class FinanceScreen extends StatefulWidget {
-  const FinanceScreen({super.key});
+  final VoidCallback? onNavigateToSales;
+
+  const FinanceScreen({super.key, this.onNavigateToSales});
 
   @override
   State<FinanceScreen> createState() => FinanceScreenState();
@@ -155,10 +157,16 @@ class FinanceScreenState extends State<FinanceScreen> {
 
     Widget movementsList;
     if (app.sales.isEmpty && app.purchases.isEmpty && app.expenses.isEmpty) {
-      movementsList = const EmptyState(
+      movementsList = EmptyState(
         icon: Icons.account_balance_wallet_outlined,
-        title: 'Sin movimientos todavía',
-        subtitle: 'Registra una venta, una compra, o toca "Registrar gasto"',
+        title: 'Sin movimientos en este periodo',
+        subtitle: 'Registra una venta o un gasto y aparecerán aquí automáticamente',
+        actionLabel: 'Registrar gasto',
+        actionIcon: Icons.payments_outlined,
+        onAction: openNewExpenseSheet,
+        secondaryLabel: widget.onNavigateToSales != null ? 'Nueva venta' : null,
+        secondaryIcon: Icons.point_of_sale,
+        onSecondary: widget.onNavigateToSales,
       );
     } else if (movements.isEmpty) {
       movementsList = const EmptyState(icon: Icons.filter_alt_off_outlined, title: 'Sin movimientos con estos filtros');
@@ -189,7 +197,7 @@ class FinanceScreenState extends State<FinanceScreen> {
         metricsRow,
         const SizedBox(height: AppSpacing.lg),
         ContentCard(
-          title: 'Ingresos vs. gastos',
+          title: 'Ingresos vs. gastos · últimas $_chartWeeks semanas',
           action: _WeeksToggle(
             weeks: _chartWeeks,
             onChanged: (v) => setState(() => _chartWeeks = v),
@@ -201,8 +209,13 @@ class FinanceScreenState extends State<FinanceScreen> {
           title: 'Movimientos recientes',
           subtitle: 'Ventas y compras se registran solas · toca "Registrar gasto" para agregar otros gastos',
         ),
+        const SizedBox(height: AppSpacing.xs),
+        Text('Tipo', style: AppTypography.label.copyWith(color: c.textSecondary, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 4),
         FilterChipGroup(options: _kTypes, selected: _type, onSelected: (v) => setState(() => _type = v)),
         const SizedBox(height: AppSpacing.sm),
+        Text('Periodo', style: AppTypography.label.copyWith(color: c.textSecondary, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 4),
         FilterChipGroup(options: _kPeriods, selected: _period, onSelected: (v) => setState(() => _period = v)),
         const SizedBox(height: AppSpacing.md),
         movementsList,
@@ -229,13 +242,13 @@ class _WeeksToggle extends StatelessWidget {
         onTap: () => onChanged(w),
         borderRadius: BorderRadius.circular(20),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
           decoration: BoxDecoration(
             color: active ? c.brandPrimary : Colors.transparent,
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(
-            '${w}s',
+            '$w sem.',
             style: AppTypography.label.copyWith(color: active ? Colors.white : c.textSecondary, fontSize: 11),
           ),
         ),

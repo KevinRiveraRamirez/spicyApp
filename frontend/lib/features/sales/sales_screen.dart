@@ -92,7 +92,14 @@ class SalesScreenState extends State<SalesScreen> {
     if (app.isLoading && app.sales.isEmpty) {
       history = const SizedBox.shrink();
     } else if (app.sales.isEmpty) {
-      history = const EmptyState(icon: Icons.receipt_long_outlined, title: 'Cero ventas aún', subtitle: 'Toca "Nueva venta" para registrar la primera');
+      history = EmptyState(
+        icon: Icons.receipt_long_outlined,
+        title: 'Aún no registras ventas',
+        subtitle: 'Cuando vendas algo, aparecerá aquí con su detalle y método de pago',
+        actionLabel: 'Registrar primera venta',
+        actionIcon: Icons.point_of_sale,
+        onAction: openNewSaleSheet,
+      );
     } else if (list.isEmpty) {
       history = const EmptyState(icon: Icons.filter_alt_off_outlined, title: 'Sin ventas con estos filtros');
     } else {
@@ -115,8 +122,13 @@ class SalesScreenState extends State<SalesScreen> {
         metricsRow,
         const SizedBox(height: AppSpacing.lg),
         const SectionHeader(title: 'Historial de ventas'),
+        const SizedBox(height: AppSpacing.xs),
+        Text('Periodo', style: AppTypography.label.copyWith(color: c.textSecondary, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 4),
         FilterChipGroup(options: _kPeriods, selected: _period, onSelected: (v) => setState(() => _period = v)),
         const SizedBox(height: AppSpacing.sm),
+        Text('Método de pago', style: AppTypography.label.copyWith(color: c.textSecondary, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 4),
         FilterChipGroup(options: _kMethods, selected: _method, onSelected: (v) => setState(() => _method = v)),
         const SizedBox(height: AppSpacing.md),
         history,

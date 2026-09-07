@@ -38,8 +38,9 @@ class AppSizes {
   static const breakpointDesktop = 1024.0;
 
   // Navegación
-  static const sidebarExpandedWidth = 240.0;
+  static const sidebarExpandedWidth = 220.0;
   static const sidebarCollapsedWidth = 80.0;
+  static const contentHeaderHeight = 64.0;
 }
 
 /// Duraciones y curvas de movimiento estándar — el movimiento debe
@@ -48,9 +49,10 @@ class AppMotion {
   AppMotion._();
 
   static const tabChange = Duration(milliseconds: 200);
-  static const sheetOpen = Duration(milliseconds: 300);
+  static const sheetOpen = Duration(milliseconds: 280);
   static const cardStagger = Duration(milliseconds: 350);
   static const pressedScale = Duration(milliseconds: 90);
   static const chipSelect = Duration(milliseconds: 160);
   static const numberChange = Duration(milliseconds: 200);
+  static const hoverElevate = Duration(milliseconds: 160);
 }

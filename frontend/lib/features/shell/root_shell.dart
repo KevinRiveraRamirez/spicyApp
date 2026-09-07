@@ -5,6 +5,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../state/app_state.dart';
 import '../../widgets/app_bottom_sheet.dart';
 import '../../widgets/error_state.dart';
+import '../../widgets/spicy_buttons.dart';
 import '../../widgets/spicy_navigation.dart';
 import '../../widgets/spicy_top_bar.dart';
 import '../dashboard/dashboard_screen.dart';
@@ -101,7 +102,7 @@ class _SpicyAppShellState extends State<SpicyAppShell> {
       InventoryScreen(key: _inventoryKey),
       SalesScreen(key: _salesKey),
       PurchasesScreen(key: _purchasesKey),
-      FinanceScreen(key: _financeKey),
+      FinanceScreen(key: _financeKey, onNavigateToSales: () => setState(() => _index = 2)),
     ];
 
     final width = MediaQuery.sizeOf(context).width;
@@ -170,8 +171,45 @@ class _SpicyAppShellState extends State<SpicyAppShell> {
       onToggleSidebar: isDesktop ? () => setState(() => _sidebarExpanded = !_sidebarExpanded) : null,
     );
 
+    if (isDesktop) {
+      // En escritorio no usamos un AppBar que cruce todo el ancho (eso
+      // duplicaba el título contra el saludo/encabezado del propio
+      // contenido, ver ajustes 2026). En su lugar, una sola barra vive
+      // dentro de la columna de contenido, a la derecha del sidebar, y
+      // ahí mismo va el botón de acción principal (ya no un FAB flotando
+      // lejos del contenido en monitores grandes).
+      final headerButton = fab == null
+          ? null
+          : PrimaryButton(label: fab.label, icon: fab.icon, onPressed: _onFabPressed);
+      return Scaffold(
+        body: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            nav,
+            Expanded(
+              child: Column(
+                children: [
+                  SpicyContentHeader(
+                    // Inicio ya muestra su propio saludo dentro del
+                    // contenido — repetir "Inicio" aquí sería la
+                    // duplicación que se pidió eliminar.
+                    title: _index == 0 ? null : _titles[_index],
+                    primaryAction: headerButton,
+                    actions: topBarActions,
+                  ),
+                  Expanded(child: body),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Tablet: riel lateral compacto (sin logo propio), AppBar clásico
+    // arriba y FAB extendido — aquí no hay conflicto de duplicación.
     return Scaffold(
-      appBar: SpicyTopBar(title: _titles[_index], actions: topBarActions, isDesktop: isDesktop),
+      appBar: SpicyTopBar(title: _titles[_index], actions: topBarActions),
       body: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
