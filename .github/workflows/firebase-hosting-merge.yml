@@ -30,6 +30,14 @@ jobs:
 
       - run: flutter pub get
 
+      # Regenera los íconos nativos (Android) a partir de
+      # assets/images/spicy_app_icon_1024.png + monograma, según lo
+      # configurado en pubspec.yaml (flutter_launcher_icons). Así el
+      # ícono de la app se actualiza solo en cada build, sin tener que
+      # correrlo a mano en la máquina de cada quien.
+      - name: Regenerar íconos de la app
+        run: dart run flutter_launcher_icons
+
       # --- Android: preparar la llave de firma y compilar el APK ---
       - name: Preparar llave de firma
         run: |
