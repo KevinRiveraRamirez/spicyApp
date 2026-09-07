@@ -146,10 +146,16 @@ class _SpicyAppShellState extends State<SpicyAppShell> {
       );
     }
 
+    // Inicio ya muestra su propio saludo en el contenido — repetir
+    // "Inicio" en la barra superior sería el título duplicado que se
+    // pidió eliminar (aplica en teléfono y tablet igual que en
+    // escritorio).
+    final appBarTitle = _index == 0 ? '' : _titles[_index];
+
     // Teléfono: navegación inferior fija.
     if (!isTablet) {
       return Scaffold(
-        appBar: SpicyTopBar(title: _titles[_index], actions: topBarActions),
+        appBar: SpicyTopBar(title: appBarTitle, actions: topBarActions),
         body: body,
         floatingActionButton: floatingAction(),
         bottomNavigationBar: SpicyNavigation(
@@ -208,9 +214,9 @@ class _SpicyAppShellState extends State<SpicyAppShell> {
     }
 
     // Tablet: riel lateral compacto (sin logo propio), AppBar clásico
-    // arriba y FAB extendido — aquí no hay conflicto de duplicación.
+    // arriba y FAB extendido.
     return Scaffold(
-      appBar: SpicyTopBar(title: _titles[_index], actions: topBarActions),
+      appBar: SpicyTopBar(title: appBarTitle, actions: topBarActions),
       body: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

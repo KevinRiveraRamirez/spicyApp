@@ -70,22 +70,41 @@ class SalesScreenState extends State<SalesScreen> {
     final width = MediaQuery.sizeOf(context).width;
     final isWide = width >= AppSizes.breakpointTablet;
 
-    final metrics = [
-      MetricCard(label: 'Hoy', value: Formatters.money(Metrics.sumSales(today)), icon: Icons.today_outlined, width: isWide ? null : 150),
-      MetricCard(label: 'Esta semana', value: Formatters.money(Metrics.sumSales(week)), icon: Icons.calendar_view_week_outlined, width: isWide ? null : 150),
-      MetricCard(label: 'Ticket promedio', value: Formatters.money(avg), icon: Icons.receipt_long_outlined, width: isWide ? null : 150),
-    ];
-
+    // Grilla en móvil: "Hoy" y "Esta semana" en la primera fila, "Ticket
+    // promedio" a ancho completo abajo — nunca una fila con scroll que
+    // deja una tarjeta a medio cortar.
     final metricsRow = isWide
-        ? Row(children: [for (int i = 0; i < metrics.length; i++) ...[if (i > 0) const SizedBox(width: AppSpacing.md), Expanded(child: metrics[i])]])
-        : SizedBox(
-            height: 108,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: metrics.length,
-              separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
-              itemBuilder: (_, i) => metrics[i],
-            ),
+        ? Row(
+            children: [
+              Expanded(child: MetricCard(label: 'Hoy', value: Formatters.money(Metrics.sumSales(today)), icon: Icons.today_outlined)),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(child: MetricCard(label: 'Esta semana', value: Formatters.money(Metrics.sumSales(week)), icon: Icons.calendar_view_week_outlined)),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(child: MetricCard(label: 'Ticket promedio', value: Formatters.money(avg), icon: Icons.receipt_long_outlined)),
+            ],
+          )
+        : LayoutBuilder(
+            builder: (context, constraints) {
+              final halfWidth = (constraints.maxWidth - AppSpacing.sm) / 2;
+              return Column(
+                children: [
+                  Row(
+                    children: [
+                      MetricCard(label: 'Hoy', value: Formatters.money(Metrics.sumSales(today)), icon: Icons.today_outlined, width: halfWidth),
+                      const SizedBox(width: AppSpacing.sm),
+                      MetricCard(
+                        label: 'Esta semana',
+                        value: Formatters.money(Metrics.sumSales(week)),
+                        icon: Icons.calendar_view_week_outlined,
+                        width: halfWidth,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  MetricCard(label: 'Ticket promedio', value: Formatters.money(avg), icon: Icons.receipt_long_outlined, width: constraints.maxWidth),
+                ],
+              );
+            },
           );
 
     Widget history;
@@ -118,9 +137,12 @@ class SalesScreenState extends State<SalesScreen> {
 
     return SpicyScreen(
       onRefresh: app.loadAll,
+      // Deja espacio de sobra abajo para que el FAB "Nueva venta" (móvil
+      // y tablet) nunca tape el último elemento del historial.
+      extraPadding: const EdgeInsets.only(bottom: 48),
       children: [
         metricsRow,
-        const SizedBox(height: AppSpacing.lg),
+        const SizedBox(height: AppSpacing.md),
         const SectionHeader(title: 'Historial de ventas'),
         const SizedBox(height: AppSpacing.xs),
         Text('Periodo', style: AppTypography.label.copyWith(color: c.textSecondary, fontWeight: FontWeight.w600)),

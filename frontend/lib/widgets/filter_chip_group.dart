@@ -20,6 +20,10 @@ class FilterChipGroup extends StatelessWidget {
       height: AppSizes.minTouchTarget,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
+        // Padding a la derecha para que el último chip nunca quede
+        // pegado/cortado contra el borde de la pantalla — siempre se ve
+        // completo y claro que hay scroll.
+        padding: const EdgeInsets.only(right: AppSpacing.lg),
         itemCount: options.length,
         separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
         itemBuilder: (context, i) {

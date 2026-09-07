@@ -27,7 +27,9 @@ class SpicyScreen extends StatelessWidget {
     final isDesktop = width >= AppSizes.breakpointDesktop;
     final isTablet = width >= AppSizes.breakpointTablet;
     final lateral = isDesktop ? AppSpacing.xxxl : (isTablet ? AppSpacing.xxl : AppSpacing.lg);
-    final top = (extraPadding?.top ?? 0) + AppSpacing.lg;
+    // Un poco menos de aire justo debajo de la barra superior — la
+    // barra ya trae su propio padding interno.
+    final top = (extraPadding?.top ?? 0) + AppSpacing.md;
     final bottom = (extraPadding?.bottom ?? 0) + AppSpacing.huge;
 
     Widget list = ListView(

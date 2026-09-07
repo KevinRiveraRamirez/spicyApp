@@ -58,89 +58,125 @@ class DashboardScreen extends StatelessWidget {
       ),
     );
 
-    final actions = Row(
-      children: [
-        Expanded(
-          child: ActionCard(
-            label: 'Nueva venta',
-            icon: Icons.point_of_sale_rounded,
-            emphasized: true,
-            onTap: () => onNavigate(2),
-          ),
-        ),
-        const SizedBox(width: AppSpacing.sm),
-        Expanded(
-          child: ActionCard(
-            label: 'Agregar producto',
-            icon: Icons.add_box_outlined,
-            onTap: () => onNavigate(1),
-          ),
-        ),
-        const SizedBox(width: AppSpacing.sm),
-        Expanded(
-          child: ActionCard(
-            label: 'Nueva compra',
-            icon: Icons.local_shipping_outlined,
-            onTap: () => onNavigate(3),
-          ),
-        ),
-      ],
-    );
+    // Acciones rápidas: en escritorio/tablet, 3 en fila. En móvil normal
+    // (360-599dp) "Nueva venta" a ancho completo arriba y las otras dos
+    // partiendo el resto. Si la pantalla es muy angosta (<360dp), las 3
+    // se apilan verticalmente — nunca se recorta texto.
+    final btnVenta = ActionCard(label: 'Nueva venta', icon: Icons.point_of_sale_rounded, emphasized: true, onTap: () => onNavigate(2));
+    final btnProducto = ActionCard(label: 'Agregar producto', icon: Icons.add_box_outlined, onTap: () => onNavigate(1));
+    final btnCompra = ActionCard(label: 'Nueva compra', icon: Icons.local_shipping_outlined, onTap: () => onNavigate(3));
 
-    final metrics = [
-      MetricCard(
+    final Widget actions;
+    if (isWide) {
+      actions = Row(
+        children: [
+          Expanded(child: btnVenta),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(child: btnProducto),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(child: btnCompra),
+        ],
+      );
+    } else if (width < 360) {
+      actions = Column(
+        children: [
+          SizedBox(width: double.infinity, child: btnVenta),
+          const SizedBox(height: AppSpacing.sm),
+          SizedBox(width: double.infinity, child: btnProducto),
+          const SizedBox(height: AppSpacing.sm),
+          SizedBox(width: double.infinity, child: btnCompra),
+        ],
+      );
+    } else {
+      actions = Column(
+        children: [
+          SizedBox(width: double.infinity, child: btnVenta),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            children: [
+              Expanded(child: btnProducto),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(child: btnCompra),
+            ],
+          ),
+        ],
+      );
+    }
+
+    final metricSpecs = [
+      (
         label: 'Ventas de hoy',
         value: Formatters.money(Metrics.sumSales(today)),
         delta: '${today.length} tickets',
+        deltaPositive: true,
         icon: Icons.today_outlined,
-        width: isWide ? null : 168,
+        valueColor: null as Color?,
+        onTap: null as VoidCallback?,
       ),
-      MetricCard(
+      (
         label: 'Utilidad (30d)',
         value: Formatters.money(profit30),
         delta: profit30 >= 0 ? 'Positiva' : 'Negativa',
         deltaPositive: profit30 >= 0,
         icon: Icons.trending_up_outlined,
         valueColor: profit30 >= 0 ? c.success : c.danger,
-        width: isWide ? null : 168,
+        onTap: null as VoidCallback?,
       ),
-      MetricCard(
+      (
         label: 'Inventario en alerta',
         value: '$totalAlerts',
         delta: totalAlerts == 0 ? 'Todo en orden' : 'Revisar ahora',
         deltaPositive: totalAlerts == 0,
         icon: Icons.warning_amber_rounded,
+        valueColor: null as Color?,
         onTap: () => onNavigate(1),
-        width: isWide ? null : 168,
       ),
-      MetricCard(
+      (
         label: 'Compras en tránsito',
         value: '$enTransito',
         delta: enTransito == 0 ? 'Nada en camino' : 'En camino',
         deltaPositive: true,
         icon: Icons.local_shipping_outlined,
+        valueColor: null as Color?,
         onTap: () => onNavigate(3),
-        width: isWide ? null : 168,
       ),
     ];
 
+    Widget metricCardFor(({String label, String value, String delta, bool deltaPositive, IconData icon, Color? valueColor, VoidCallback? onTap}) m,
+        {double? width}) {
+      return MetricCard(
+        label: m.label,
+        value: m.value,
+        delta: m.delta,
+        deltaPositive: m.deltaPositive,
+        icon: m.icon,
+        valueColor: m.valueColor,
+        onTap: m.onTap,
+        width: width,
+      );
+    }
+
+    // Grilla 2x2 en móvil (1 columna si la pantalla es muy angosta) en
+    // vez de una fila con scroll horizontal recortada.
     final metricsRow = isWide
         ? Row(
             children: [
-              for (int i = 0; i < metrics.length; i++) ...[
+              for (int i = 0; i < metricSpecs.length; i++) ...[
                 if (i > 0) const SizedBox(width: AppSpacing.md),
-                Expanded(child: metrics[i]),
+                Expanded(child: metricCardFor(metricSpecs[i])),
               ],
             ],
           )
-        : SizedBox(
-            height: 108,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: metrics.length,
-              separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
-              itemBuilder: (_, i) => metrics[i],
-            ),
+        : LayoutBuilder(
+            builder: (context, constraints) {
+              final columns = constraints.maxWidth < 340 ? 1 : 2;
+              final cardWidth = columns == 1 ? constraints.maxWidth : (constraints.maxWidth - AppSpacing.sm) / 2;
+              return Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
+                children: [for (final m in metricSpecs) metricCardFor(m, width: cardWidth)],
+              );
+            },
           );
 
     final alertRows = <Widget>[
@@ -303,11 +339,22 @@ class _AlertRow extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: AppTypography.bodyMedium.copyWith(color: c.textPrimary, fontWeight: FontWeight.w700)),
-                    Text(subtitle, style: AppTypography.label.copyWith(color: c.textSecondary, fontWeight: FontWeight.w500)),
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.bodyMedium.copyWith(color: c.textPrimary, fontWeight: FontWeight.w700),
+                    ),
+                    Text(
+                      subtitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.label.copyWith(color: c.textSecondary, fontWeight: FontWeight.w500),
+                    ),
                   ],
                 ),
               ),
+              const SizedBox(width: AppSpacing.xs),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
                 decoration: BoxDecoration(color: c.danger.withOpacity(.12), borderRadius: BorderRadius.circular(20)),

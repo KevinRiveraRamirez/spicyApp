@@ -43,11 +43,20 @@ class ActionCard extends StatelessWidget {
               border: emphasized ? null : Border.all(color: c.border),
             ),
             child: Row(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(icon, size: 20, color: fg),
                 const SizedBox(width: AppSpacing.sm),
-                Text(label, style: AppTypography.bodyMedium.copyWith(color: fg, fontWeight: FontWeight.w700)),
+                // Flexible + ellipsis: nunca desborda aunque la tarjeta
+                // quede angosta (3 en fila en un teléfono chico).
+                Flexible(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.bodyMedium.copyWith(color: fg, fontWeight: FontWeight.w700),
+                  ),
+                ),
               ],
             ),
           ),
