@@ -222,6 +222,9 @@ class PurchasesScreenState extends State<PurchasesScreen> {
 
     return SpicyScreen(
       onRefresh: app.loadAll,
+      // Espacio extra abajo solo si hay órdenes (y por lo tanto FAB
+      // "Nueva compra" visible) — vacío usa el CTA del EmptyState.
+      extraPadding: allPurchases.isNotEmpty ? const EdgeInsets.only(bottom: 48) : null,
       children: [
         metricsRow,
         const SizedBox(height: AppSpacing.lg),

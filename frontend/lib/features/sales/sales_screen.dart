@@ -137,9 +137,11 @@ class SalesScreenState extends State<SalesScreen> {
 
     return SpicyScreen(
       onRefresh: app.loadAll,
-      // Deja espacio de sobra abajo para que el FAB "Nueva venta" (móvil
-      // y tablet) nunca tape el último elemento del historial.
-      extraPadding: const EdgeInsets.only(bottom: 48),
+      // Solo reserva espacio extra abajo cuando SÍ hay historial (y por
+      // lo tanto SÍ aparece el FAB "Nueva venta"). Si está vacío, el CTA
+      // vive dentro del EmptyState y no hay FAB que tapar — no dejamos
+      // hueco de más.
+      extraPadding: app.sales.isNotEmpty ? const EdgeInsets.only(bottom: 48) : null,
       children: [
         metricsRow,
         const SizedBox(height: AppSpacing.md),

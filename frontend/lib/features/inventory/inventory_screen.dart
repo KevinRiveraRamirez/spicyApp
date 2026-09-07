@@ -103,7 +103,13 @@ class InventoryScreenState extends State<InventoryScreen> {
       );
     }
 
-    return SpicyScreen(onRefresh: app.loadAll, children: [header, body]);
+    return SpicyScreen(
+      onRefresh: app.loadAll,
+      // Espacio extra abajo solo cuando hay piezas (y por lo tanto FAB
+      // "Agregar producto" visible) — vacío usa el CTA del EmptyState.
+      extraPadding: app.products.isNotEmpty ? const EdgeInsets.only(bottom: 48) : null,
+      children: [header, body],
+    );
   }
 
   String _marginLabel(Product p) {

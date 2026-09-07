@@ -68,6 +68,20 @@ class _SpicyAppShellState extends State<SpicyAppShell> {
         _ => null,
       };
 
+  // Cuando una sección está vacía, su EmptyState ya trae el botón de
+  // acción en contexto ("Registrar primera venta", etc.) — mostrar
+  // TAMBIÉN el FAB (o el botón del encabezado en escritorio) sería una
+  // acción duplicada en pantalla. Punto único de verdad para esa
+  // decisión, usado tanto por el FAB móvil/tablet como por el botón del
+  // encabezado en escritorio.
+  bool _showActionForCurrentState(AppState app) => switch (_index) {
+        1 => app.products.isNotEmpty,
+        2 => app.sales.isNotEmpty,
+        3 => app.purchases.isNotEmpty,
+        4 => app.sales.isNotEmpty || app.purchases.isNotEmpty || app.expenses.isNotEmpty,
+        _ => false,
+      };
+
   void _onFabPressed() {
     switch (_index) {
       case 1:
@@ -109,6 +123,9 @@ class _SpicyAppShellState extends State<SpicyAppShell> {
     final isDesktop = width >= AppSizes.breakpointDesktop;
     final isTablet = width >= AppSizes.breakpointTablet;
     final fab = _fabSpec;
+    // Nunca dos controles para la misma acción: si la sección está
+    // vacía, el CTA ya vive dentro del EmptyState.
+    final showAction = fab != null && _showActionForCurrentState(app);
 
     final topBarActions = [
       IconButton(
@@ -136,7 +153,7 @@ class _SpicyAppShellState extends State<SpicyAppShell> {
             : IndexedStack(index: _index, children: screens);
 
     Widget floatingAction() {
-      if (fab == null) return const SizedBox.shrink();
+      if (!showAction || fab == null) return const SizedBox.shrink();
       return FloatingActionButton.extended(
         onPressed: _onFabPressed,
         backgroundColor: c.brandPrimary,
@@ -184,7 +201,7 @@ class _SpicyAppShellState extends State<SpicyAppShell> {
       // dentro de la columna de contenido, a la derecha del sidebar, y
       // ahí mismo va el botón de acción principal (ya no un FAB flotando
       // lejos del contenido en monitores grandes).
-      final headerButton = fab == null
+      final headerButton = !showAction || fab == null
           ? null
           : PrimaryButton(label: fab.label, icon: fab.icon, onPressed: _onFabPressed);
       return Scaffold(

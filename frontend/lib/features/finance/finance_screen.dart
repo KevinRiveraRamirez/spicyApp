@@ -131,28 +131,54 @@ class FinanceScreenState extends State<FinanceScreen> {
     final width = MediaQuery.sizeOf(context).width;
     final isWide = width >= AppSizes.breakpointTablet;
 
-    final metrics = [
-      MetricCard(label: 'Ingresos · 30d', value: Formatters.money(rev), icon: Icons.trending_up_outlined, valueColor: c.success, width: isWide ? null : 150),
-      MetricCard(label: 'Gastos · 30d', value: Formatters.money(exp + purch), icon: Icons.trending_down_outlined, valueColor: c.danger, width: isWide ? null : 150),
-      MetricCard(
-        label: 'Utilidad neta',
-        value: Formatters.money(profit),
-        icon: Icons.account_balance_wallet_outlined,
-        valueColor: profit >= 0 ? c.success : c.danger,
-        width: isWide ? null : 150,
-      ),
-    ];
+    Widget metricCard(String label, String value, IconData icon, Color? valueColor, {double? width}) {
+      return MetricCard(label: label, value: value, icon: icon, valueColor: valueColor, width: width);
+    }
 
+    // Grilla responsive: 3 columnas en tablet/escritorio; en móvil, 2
+    // columnas con "Utilidad neta" a ancho completo en la 2da fila (o 1
+    // columna si la pantalla es muy angosta) — nunca 3 tarjetas de ancho
+    // fijo apretadas en un scroll que corta la última.
     final metricsRow = isWide
-        ? Row(children: [for (int i = 0; i < metrics.length; i++) ...[if (i > 0) const SizedBox(width: AppSpacing.md), Expanded(child: metrics[i])]])
-        : SizedBox(
-            height: 108,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: metrics.length,
-              separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
-              itemBuilder: (_, i) => metrics[i],
-            ),
+        ? Row(
+            children: [
+              Expanded(child: metricCard('Ingresos · 30d', Formatters.money(rev), Icons.trending_up_outlined, c.success)),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(child: metricCard('Gastos · 30d', Formatters.money(exp + purch), Icons.trending_down_outlined, c.danger)),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(child: metricCard('Utilidad neta', Formatters.money(profit), Icons.account_balance_wallet_outlined, profit >= 0 ? c.success : c.danger)),
+            ],
+          )
+        : LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.maxWidth < 340) {
+                return Column(
+                  children: [
+                    metricCard('Ingresos · 30d', Formatters.money(rev), Icons.trending_up_outlined, c.success, width: constraints.maxWidth),
+                    const SizedBox(height: AppSpacing.sm),
+                    metricCard('Gastos · 30d', Formatters.money(exp + purch), Icons.trending_down_outlined, c.danger, width: constraints.maxWidth),
+                    const SizedBox(height: AppSpacing.sm),
+                    metricCard('Utilidad neta', Formatters.money(profit), Icons.account_balance_wallet_outlined, profit >= 0 ? c.success : c.danger,
+                        width: constraints.maxWidth),
+                  ],
+                );
+              }
+              final halfWidth = (constraints.maxWidth - AppSpacing.sm) / 2;
+              return Column(
+                children: [
+                  Row(
+                    children: [
+                      metricCard('Ingresos · 30d', Formatters.money(rev), Icons.trending_up_outlined, c.success, width: halfWidth),
+                      const SizedBox(width: AppSpacing.sm),
+                      metricCard('Gastos · 30d', Formatters.money(exp + purch), Icons.trending_down_outlined, c.danger, width: halfWidth),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  metricCard('Utilidad neta', Formatters.money(profit), Icons.account_balance_wallet_outlined, profit >= 0 ? c.success : c.danger,
+                      width: constraints.maxWidth),
+                ],
+              );
+            },
           );
 
     Widget movementsList;
@@ -191,18 +217,25 @@ class FinanceScreenState extends State<FinanceScreen> {
       );
     }
 
+    final hasAnyMovement = app.sales.isNotEmpty || app.purchases.isNotEmpty || app.expenses.isNotEmpty;
+
     return SpicyScreen(
       onRefresh: app.loadAll,
+      // Espacio extra abajo solo si hay movimientos (y por lo tanto FAB
+      // "Registrar gasto" visible) — vacío usa el CTA del EmptyState.
+      extraPadding: hasAnyMovement ? const EdgeInsets.only(bottom: 48) : null,
       children: [
         metricsRow,
         const SizedBox(height: AppSpacing.lg),
         ContentCard(
-          title: 'Ingresos vs. gastos · últimas $_chartWeeks semanas',
-          action: _WeeksToggle(
-            weeks: _chartWeeks,
-            onChanged: (v) => setState(() => _chartWeeks = v),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _ChartHeader(weeks: _chartWeeks, onChanged: (v) => setState(() => _chartWeeks = v)),
+              const SizedBox(height: AppSpacing.md),
+              IncomeExpenseChart(sales: app.sales, expenses: app.expenses, purchases: app.purchases, weeks: _chartWeeks),
+            ],
           ),
-          child: IncomeExpenseChart(sales: app.sales, expenses: app.expenses, purchases: app.purchases, weeks: _chartWeeks),
         ),
         const SizedBox(height: AppSpacing.xl),
         const SectionHeader(
@@ -220,6 +253,55 @@ class FinanceScreenState extends State<FinanceScreen> {
         const SizedBox(height: AppSpacing.md),
         movementsList,
       ],
+    );
+  }
+}
+
+/// Encabezado de la tarjeta del gráfico: título + selector de semanas.
+/// En angosto se apilan (título en su propia línea, selector debajo);
+/// si hay suficiente ancho van en la misma fila. Así el chip nunca sale
+/// de los límites de la tarjeta.
+class _ChartHeader extends StatelessWidget {
+  final int weeks;
+  final ValueChanged<int> onChanged;
+  const _ChartHeader({required this.weeks, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final title = Text('Ingresos vs. gastos', style: AppTypography.sectionTitle.copyWith(color: c.textPrimary, fontSize: 15));
+        final subtitle = Text('Últimas $weeks semanas', style: AppTypography.label.copyWith(color: c.textSecondary));
+        final toggle = _WeeksToggle(weeks: weeks, onChanged: onChanged);
+
+        if (constraints.maxWidth >= 420) {
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [title, const SizedBox(height: 2), subtitle],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              toggle,
+            ],
+          );
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            title,
+            const SizedBox(height: 2),
+            subtitle,
+            const SizedBox(height: AppSpacing.sm),
+            toggle,
+          ],
+        );
+      },
     );
   }
 }
